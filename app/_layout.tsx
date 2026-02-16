@@ -28,6 +28,19 @@ function RootLayoutNav() {
           presentation: "modal",
         }}
       />
+      <Stack.Screen
+        name="inspiration"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="game/[type]"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

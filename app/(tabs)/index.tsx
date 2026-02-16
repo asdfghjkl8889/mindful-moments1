@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -66,9 +66,7 @@ function MoodButton({
         size={28}
         color={selected ? mood.color : "#B2BEC3"}
       />
-      <Text
-        style={[styles.moodLabel, { color: selected ? mood.color : "#B2BEC3" }]}
-      >
+      <Text style={[styles.moodLabel, { color: selected ? mood.color : "#B2BEC3" }]}>
         {mood.label}
       </Text>
     </Pressable>
@@ -133,9 +131,7 @@ function LarryTurtle({ message, isDark }: { message: string; isDark: boolean }) 
     >
       <View style={styles.larryRow}>
         <Animated.View style={[styles.larryAvatar, bobStyle]}>
-          <Text style={styles.larryEmoji}>
-            <MaterialCommunityIcons name="turtle" size={36} color={colors.sage} />
-          </Text>
+          <MaterialCommunityIcons name="turtle" size={36} color={colors.sage} />
         </Animated.View>
         <View style={styles.larryTextWrap}>
           <Text style={[styles.larryName, { color: colors.sage }]}>Larry the Turtle</Text>
@@ -143,6 +139,111 @@ function LarryTurtle({ message, isDark }: { message: string; isDark: boolean }) 
             {message}
           </Text>
         </View>
+      </View>
+    </View>
+  );
+}
+
+function MoodCalendar({ moods, isDark }: { moods: MoodEntry[]; isDark: boolean }) {
+  const colors = isDark ? Colors.dark : Colors.light;
+  const now = new Date();
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+
+  const monthName = new Date(viewYear, viewMonth).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
+
+  const moodMap = useMemo(() => {
+    const map: Record<string, MoodEntry["mood"]> = {};
+    moods.forEach((m) => {
+      map[m.date] = m.mood;
+    });
+    return map;
+  }, [moods]);
+
+  const getMoodColor = (mood: MoodEntry["mood"] | undefined) => {
+    if (!mood) return "transparent";
+    const m = MOODS.find((mo) => mo.key === mood);
+    return m ? m.color : "transparent";
+  };
+
+  const goToPrevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear(viewYear - 1);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear(viewYear + 1);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  };
+
+  const days = [];
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    days.push(<View key={`empty-${i}`} style={styles.calDay} />);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const mood = moodMap[dateStr];
+    const mColor = getMoodColor(mood);
+    const isToday = d === now.getDate() && viewMonth === now.getMonth() && viewYear === now.getFullYear();
+
+    days.push(
+      <View
+        key={d}
+        style={[
+          styles.calDay,
+          mood ? { backgroundColor: mColor + "25" } : {},
+          isToday ? { borderWidth: 1.5, borderColor: colors.tint } : {},
+        ]}
+      >
+        <Text
+          style={[
+            styles.calDayText,
+            { color: mood ? mColor : colors.textTertiary },
+            isToday && { color: colors.tint, fontFamily: "Nunito_700Bold" },
+          ]}
+        >
+          {d}
+        </Text>
+        {mood && <View style={[styles.calDot, { backgroundColor: mColor }]} />}
+      </View>,
+    );
+  }
+
+  return (
+    <View style={[styles.calendarCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+      <View style={styles.calHeader}>
+        <Pressable onPress={goToPrevMonth} style={styles.calNavBtn}>
+          <Ionicons name="chevron-back" size={18} color={colors.textSecondary} />
+        </Pressable>
+        <Text style={[styles.calMonthText, { color: colors.text }]}>{monthName}</Text>
+        <Pressable onPress={goToNextMonth} style={styles.calNavBtn}>
+          <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        </Pressable>
+      </View>
+      <View style={styles.calWeekRow}>
+        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+          <Text key={i} style={[styles.calWeekDay, { color: colors.textTertiary }]}>{d}</Text>
+        ))}
+      </View>
+      <View style={styles.calGrid}>{days}</View>
+      <View style={styles.calLegend}>
+        {MOODS.map((m) => (
+          <View key={m.key} style={styles.calLegendItem}>
+            <View style={[styles.calLegendDot, { backgroundColor: m.color }]} />
+            <Text style={[styles.calLegendText, { color: colors.textTertiary }]}>{m.label}</Text>
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -157,7 +258,7 @@ export default function HomeScreen() {
   const [streak, setStreak] = useState<StreakData>({
     currentStreak: 0, longestStreak: 0, lastActiveDate: "", totalSessions: 0, totalMinutes: 0,
   });
-  const [recentMoods, setRecentMoods] = useState<MoodEntry[]>([]);
+  const [allMoods, setAllMoods] = useState<MoodEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [moodSaved, setMoodSaved] = useState(false);
   const [quote, setQuote] = useState(getDailyQuote());
@@ -171,7 +272,7 @@ export default function HomeScreen() {
       storage.getProfile(),
     ]);
     setStreak(streakData);
-    setRecentMoods(moods.slice(0, 7));
+    setAllMoods(moods);
     setProfile(profileData);
 
     const today = new Date().toISOString().split("T")[0];
@@ -219,6 +320,7 @@ export default function HomeScreen() {
   };
 
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const recentMoods = allMoods.slice(0, 7);
 
   return (
     <ScrollView
@@ -232,9 +334,7 @@ export default function HomeScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Animated.View
-        entering={Platform.OS !== "web" ? FadeInDown.duration(600) : undefined}
-      >
+      <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(600) : undefined}>
         <LinearGradient
           colors={isDark ? ["#0A2E2A", "#1A1A2E"] : ["#E0F2F1", "#C8E6C9", "#FAFAF5"]}
           style={styles.headerGradient}
@@ -301,9 +401,47 @@ export default function HomeScreen() {
         </View>
       </Animated.View>
 
+      <Animated.View
+        entering={Platform.OS !== "web" ? FadeInDown.delay(300).duration(600) : undefined}
+      >
+        <Pressable onPress={() => router.push("/inspiration")}>
+          <View
+            style={[styles.quoteCard, { backgroundColor: colors.tealLight, borderColor: colors.cardBorder }]}
+          >
+            <View style={styles.quoteHeader}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Ionicons name="sparkles" size={20} color={colors.tint} />
+                <Text style={[styles.quoteBadge, { color: colors.tint }]}>Daily Inspiration</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+            </View>
+            <Text style={[styles.quoteText, { color: colors.text }]}>
+              "{quote.text}"
+            </Text>
+            <Text style={[styles.quoteAuthor, { color: colors.textSecondary }]}>
+              - {quote.author}
+            </Text>
+          </View>
+        </Pressable>
+
+        <Pressable onPress={shuffleQuote} style={styles.shuffleWrap}>
+          <Ionicons name="shuffle" size={14} color={colors.textTertiary} />
+          <Text style={[styles.shuffleText, { color: colors.textTertiary }]}>Shuffle quote</Text>
+        </Pressable>
+      </Animated.View>
+
+      <Animated.View
+        entering={Platform.OS !== "web" ? FadeInDown.delay(400).duration(600) : undefined}
+      >
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Mood Calendar</Text>
+        <View style={{ paddingHorizontal: 20 }}>
+          <MoodCalendar moods={allMoods} isDark={isDark} />
+        </View>
+      </Animated.View>
+
       {recentMoods.length > 0 && (
         <Animated.View
-          entering={Platform.OS !== "web" ? FadeInRight.delay(350).duration(600) : undefined}
+          entering={Platform.OS !== "web" ? FadeInRight.delay(500).duration(600) : undefined}
         >
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Moods</Text>
           <ScrollView
@@ -331,30 +469,6 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
       )}
-
-      <Animated.View
-        entering={Platform.OS !== "web" ? FadeInDown.delay(450).duration(600) : undefined}
-      >
-        <Pressable onPress={shuffleQuote}>
-          <View
-            style={[
-              styles.quoteCard,
-              { backgroundColor: colors.tealLight, borderColor: colors.cardBorder },
-            ]}
-          >
-            <View style={styles.quoteHeader}>
-              <Ionicons name="sparkles" size={20} color={colors.tint} />
-              <Ionicons name="shuffle" size={16} color={colors.textTertiary} />
-            </View>
-            <Text style={[styles.quoteText, { color: colors.text }]}>
-              "{quote.text}"
-            </Text>
-            <Text style={[styles.quoteAuthor, { color: colors.textSecondary }]}>
-              - {quote.author}
-            </Text>
-          </View>
-        </Pressable>
-      </Animated.View>
     </ScrollView>
   );
 }
@@ -390,7 +504,6 @@ const styles = StyleSheet.create({
   larryAvatar: {
     width: 56, height: 56, borderRadius: 28, backgroundColor: "rgba(123,174,127,0.15)", alignItems: "center", justifyContent: "center",
   },
-  larryEmoji: { fontSize: 32 },
   larryTextWrap: { flex: 1 },
   larryName: { fontFamily: "Nunito_700Bold", fontSize: 14, marginBottom: 2 },
   larryMessage: { fontFamily: "Nunito_400Regular", fontSize: 13, lineHeight: 18 },
@@ -406,19 +519,54 @@ const styles = StyleSheet.create({
   },
   statValue: { fontFamily: "Nunito_800ExtraBold", fontSize: 22 },
   statLabel: { fontFamily: "Nunito_500Medium", fontSize: 11 },
-  moodHistoryRow: { paddingHorizontal: 20, gap: 10 },
-  moodHistoryCard: {
-    alignItems: "center", justifyContent: "center", padding: 12, borderRadius: 14, borderWidth: 1, width: 64, gap: 6,
-  },
-  moodHistoryLabel: { fontFamily: "Nunito_500Medium", fontSize: 11 },
   quoteCard: {
     marginHorizontal: 20, marginTop: 24, borderRadius: 16, padding: 20, borderWidth: 1,
   },
   quoteHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8,
   },
+  quoteBadge: { fontFamily: "Nunito_600SemiBold", fontSize: 13 },
   quoteText: {
     fontFamily: "Nunito_600SemiBold", fontSize: 15, fontStyle: "italic", lineHeight: 22, marginBottom: 8,
   },
   quoteAuthor: { fontFamily: "Nunito_500Medium", fontSize: 13, textAlign: "right" },
+  shuffleWrap: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 8, paddingHorizontal: 20,
+  },
+  shuffleText: { fontFamily: "Nunito_500Medium", fontSize: 12 },
+  calendarCard: {
+    borderRadius: 16, padding: 16, borderWidth: 1,
+  },
+  calHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12,
+  },
+  calNavBtn: { padding: 4 },
+  calMonthText: { fontFamily: "Nunito_700Bold", fontSize: 16 },
+  calWeekRow: {
+    flexDirection: "row", marginBottom: 8,
+  },
+  calWeekDay: {
+    flex: 1, textAlign: "center", fontFamily: "Nunito_600SemiBold", fontSize: 11,
+  },
+  calGrid: {
+    flexDirection: "row", flexWrap: "wrap",
+  },
+  calDay: {
+    width: "14.28%", aspectRatio: 1, alignItems: "center", justifyContent: "center", borderRadius: 8,
+  },
+  calDayText: { fontFamily: "Nunito_500Medium", fontSize: 12 },
+  calDot: {
+    width: 4, height: 4, borderRadius: 2, marginTop: 2,
+  },
+  calLegend: {
+    flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8, marginTop: 12,
+  },
+  calLegendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  calLegendDot: { width: 8, height: 8, borderRadius: 4 },
+  calLegendText: { fontFamily: "Nunito_500Medium", fontSize: 10 },
+  moodHistoryRow: { paddingHorizontal: 20, gap: 10 },
+  moodHistoryCard: {
+    alignItems: "center", justifyContent: "center", padding: 12, borderRadius: 14, borderWidth: 1, width: 64, gap: 6,
+  },
+  moodHistoryLabel: { fontFamily: "Nunito_500Medium", fontSize: 11 },
 });

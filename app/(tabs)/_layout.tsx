@@ -26,9 +26,9 @@ function NativeTabLayout() {
         <Icon sf={{ default: "fork.knife", selected: "fork.knife" }} />
         <Label>Eating</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="games">
-        <Icon sf={{ default: "gamecontroller", selected: "gamecontroller.fill" }} />
-        <Label>Games</Label>
+      <NativeTabs.Trigger name="explore">
+        <Icon sf={{ default: "safari", selected: "safari.fill" }} />
+        <Label>Explore</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -121,11 +121,11 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="games"
+        name="explore"
         options={{
-          title: "Games",
+          title: "Explore",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="game-controller" size={size} color={color} />
+            <Ionicons name="compass" size={size} color={color} />
           ),
         }}
       />
