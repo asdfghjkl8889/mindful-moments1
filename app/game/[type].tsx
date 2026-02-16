@@ -353,7 +353,7 @@ export default function GameScreen() {
       ]}
     >
       <LinearGradient
-        colors={isDark ? ["#1A1A2E", "#0A2E2A"] : ["#FAFAF5", "#E0F2F1"]}
+        colors={["#FFFFFF", "#E0F7FA"]}
         style={StyleSheet.absoluteFill}
       />
 

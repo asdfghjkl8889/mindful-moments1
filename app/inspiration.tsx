@@ -67,7 +67,7 @@ export default function InspirationScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <LinearGradient
-        colors={isDark ? ["#1A1A2E", "#0A2E2A", "#1A1A2E"] : ["#FAFAF5", "#E0F2F1", "#F3E5F5"]}
+        colors={["#FFFFFF", "#E0F7FA", "#F3E5F5"]}
         style={StyleSheet.absoluteFill}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}

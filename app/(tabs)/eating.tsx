@@ -31,15 +31,14 @@ function TipCard({
   colors: any;
   index: number;
 }) {
-  const bgColors = ["#E8F5E9", "#E0F2F1", "#FFF8E1", "#F3E5F5", "#E3F2FD", "#FBE9E7", "#F1F8E9", "#E8EAF6"];
-  const bgColorsDark = ["#1B3B2A", "#0A2E2A", "#2A2520", "#2A1E3A", "#1A2A3A", "#2A1E1A", "#1E2A1A", "#1A1E3A"];
+  const bgColors = ["#E8F5E9", "#E0F7FA", "#FFF8E1", "#F3E5F5", "#E3F2FD", "#FBE9E7", "#F1F8E9", "#E8EAF6"];
 
   return (
     <View
       style={[
         styles.tipCard,
         {
-          backgroundColor: colors.background === "#1A1A2E" ? bgColorsDark[index % bgColorsDark.length] : bgColors[index % bgColors.length],
+          backgroundColor: bgColors[index % bgColors.length],
           borderColor: colors.cardBorder,
         },
       ]}
@@ -217,7 +216,7 @@ export default function EatingScreen() {
           <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
             <View style={styles.larryBanner}>
               <LinearGradient
-                colors={isDark ? ["#1B3B2A", "#0A2E2A"] : ["#E8F5E9", "#E0F2F1"]}
+                colors={["#E8F5E9", "#E0F7FA"]}
                 style={styles.larryBannerGrad}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}

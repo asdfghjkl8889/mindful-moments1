@@ -348,7 +348,7 @@ export default function MeditateScreen() {
       ]}
     >
       <LinearGradient
-        colors={isDark ? ["#1A1A2E", "#0A2E2A", "#1A1A2E"] : ["#FAFAF5", "#E0F2F1", "#E8F5E9"]}
+        colors={["#FFFFFF", "#E0F7FA", "#E8F5E9"]}
         style={StyleSheet.absoluteFill}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}

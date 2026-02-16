@@ -227,7 +227,7 @@ export default function ExploreScreen() {
     >
       <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(600) : undefined}>
         <LinearGradient
-          colors={isDark ? ["#0A2E2A", "#1A1A2E"] : ["#E0F2F1", "#C8E6C9", "#FAFAF5"]}
+          colors={["#E0F7FA", "#C8E6C9", "#FFFFFF"]}
           style={styles.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -417,7 +417,7 @@ export default function ExploreScreen() {
             ))}
           </View>
 
-          <View style={[styles.larryBanner, { backgroundColor: isDark ? "#1B3B2A" : "#E8F5E9", borderColor: colors.cardBorder }]}>
+          <View style={[styles.larryBanner, { backgroundColor: "#E8F5E9", borderColor: colors.cardBorder }]}>
             <View style={styles.larryBannerRow}>
               <View style={styles.larryBannerAvatar}>
                 <MaterialCommunityIcons name="turtle" size={28} color={colors.sage} />

@@ -59,7 +59,7 @@ function ClassicTabLayout() {
               ? Colors.dark.background
               : Colors.light.background,
           borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: isDark ? "#333" : "#E8ECF0",
+          borderTopColor: "#E2E8F0",
           elevation: 0,
           ...(isWeb ? { height: 84 } : {}),
         },
