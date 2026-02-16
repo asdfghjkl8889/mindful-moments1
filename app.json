@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "My App",
-    "slug": "my-app",
+    "name": "Mindful Moments",
+    "slug": "mindful-moments",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "mindfulmoments",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
