@@ -10,37 +10,37 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Animated, {
   FadeInDown,
   FadeInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
 } from "react-native-reanimated";
+import { router } from "expo-router";
 import Colors from "@/constants/colors";
-import { storage, MoodEntry, StreakData } from "@/lib/storage";
+import {
+  storage,
+  MoodEntry,
+  StreakData,
+  ProfileData,
+  getDailyQuote,
+  getRandomQuote,
+  getLarryMessage,
+} from "@/lib/storage";
 
 const MOODS = [
   { key: "happy" as const, icon: "sunny", label: "Happy", color: "#66BB6A" },
-  {
-    key: "good" as const,
-    icon: "happy",
-    label: "Good",
-    color: "#81C784",
-  },
-  {
-    key: "neutral" as const,
-    icon: "remove-circle",
-    label: "Okay",
-    color: "#FFD54F",
-  },
+  { key: "good" as const, icon: "happy", label: "Good", color: "#81C784" },
+  { key: "neutral" as const, icon: "remove-circle", label: "Okay", color: "#FFD54F" },
   { key: "sad" as const, icon: "rainy", label: "Sad", color: "#FF8A65" },
-  {
-    key: "stressed" as const,
-    icon: "thunderstorm",
-    label: "Stressed",
-    color: "#EF5350",
-  },
+  { key: "stressed" as const, icon: "thunderstorm", label: "Stressed", color: "#EF5350" },
 ];
 
 function MoodButton({
@@ -67,10 +67,7 @@ function MoodButton({
         color={selected ? mood.color : "#B2BEC3"}
       />
       <Text
-        style={[
-          styles.moodLabel,
-          { color: selected ? mood.color : "#B2BEC3" },
-        ]}
+        style={[styles.moodLabel, { color: selected ? mood.color : "#B2BEC3" }]}
       >
         {mood.label}
       </Text>
@@ -96,19 +93,57 @@ function StatCard({
     <View
       style={[
         styles.statCard,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.cardBorder,
-        },
+        { backgroundColor: colors.card, borderColor: colors.cardBorder },
       ]}
     >
       <View style={[styles.statIconWrap, { backgroundColor: color + "18" }]}>
         <Ionicons name={icon as any} size={20} color={color} />
       </View>
       <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-        {label}
-      </Text>
+      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+    </View>
+  );
+}
+
+function LarryTurtle({ message, isDark }: { message: string; isDark: boolean }) {
+  const colors = isDark ? Colors.dark : Colors.light;
+  const bobValue = useSharedValue(0);
+
+  useEffect(() => {
+    bobValue.value = withRepeat(
+      withSequence(
+        withTiming(-4, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+        withTiming(4, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      true,
+    );
+  }, []);
+
+  const bobStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: bobValue.value }],
+  }));
+
+  return (
+    <View
+      style={[
+        styles.larryCard,
+        { backgroundColor: isDark ? "#1B3B2A" : "#E8F5E9", borderColor: colors.cardBorder },
+      ]}
+    >
+      <View style={styles.larryRow}>
+        <Animated.View style={[styles.larryAvatar, bobStyle]}>
+          <Text style={styles.larryEmoji}>
+            <MaterialCommunityIcons name="turtle" size={36} color={colors.sage} />
+          </Text>
+        </Animated.View>
+        <View style={styles.larryTextWrap}>
+          <Text style={[styles.larryName, { color: colors.sage }]}>Larry the Turtle</Text>
+          <Text style={[styles.larryMessage, { color: colors.textSecondary }]}>
+            {message}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }
@@ -118,27 +153,26 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
-  const [selectedMood, setSelectedMood] = useState<MoodEntry["mood"] | null>(
-    null,
-  );
+  const [selectedMood, setSelectedMood] = useState<MoodEntry["mood"] | null>(null);
   const [streak, setStreak] = useState<StreakData>({
-    currentStreak: 0,
-    longestStreak: 0,
-    lastActiveDate: "",
-    totalSessions: 0,
-    totalMinutes: 0,
+    currentStreak: 0, longestStreak: 0, lastActiveDate: "", totalSessions: 0, totalMinutes: 0,
   });
   const [recentMoods, setRecentMoods] = useState<MoodEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [moodSaved, setMoodSaved] = useState(false);
+  const [quote, setQuote] = useState(getDailyQuote());
+  const [larryMsg] = useState(getLarryMessage());
+  const [profile, setProfile] = useState<ProfileData>({ name: "", avatar: "lotus" });
 
   const loadData = useCallback(async () => {
-    const [streakData, moods] = await Promise.all([
+    const [streakData, moods, profileData] = await Promise.all([
       storage.getStreak(),
       storage.getMoods(),
+      storage.getProfile(),
     ]);
     setStreak(streakData);
     setRecentMoods(moods.slice(0, 7));
+    setProfile(profileData);
 
     const today = new Date().toISOString().split("T")[0];
     const todayMood = moods.find((m) => m.date === today);
@@ -154,6 +188,7 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    setQuote(getRandomQuote());
     await loadData();
     setRefreshing(false);
   }, [loadData]);
@@ -176,6 +211,13 @@ export default function HomeScreen() {
     return "Good evening";
   };
 
+  const shuffleQuote = () => {
+    if (Platform.OS !== "web") {
+      Haptics.selectionAsync();
+    }
+    setQuote(getRandomQuote());
+  };
+
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
   return (
@@ -194,21 +236,30 @@ export default function HomeScreen() {
         entering={Platform.OS !== "web" ? FadeInDown.duration(600) : undefined}
       >
         <LinearGradient
-          colors={
-            isDark
-              ? ["#0A2E2A", "#1A1A2E"]
-              : ["#E0F2F1", "#C8E6C9", "#FAFAF5"]
-          }
+          colors={isDark ? ["#0A2E2A", "#1A1A2E"] : ["#E0F2F1", "#C8E6C9", "#FAFAF5"]}
           style={styles.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-            {getGreeting()}
-          </Text>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
-            How are you feeling?
-          </Text>
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+                {getGreeting()}{profile.name ? `, ${profile.name}` : ""}
+              </Text>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>
+                How are you feeling?
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => router.push("/profile")}
+              style={({ pressed }) => [
+                styles.profileBtn,
+                { backgroundColor: colors.tint + "20", opacity: pressed ? 0.8 : 1 },
+              ]}
+            >
+              <Ionicons name="person" size={20} color={colors.tint} />
+            </Pressable>
+          </View>
         </LinearGradient>
       </Animated.View>
 
@@ -233,49 +284,28 @@ export default function HomeScreen() {
       )}
 
       <Animated.View
-        entering={
-          Platform.OS !== "web" ? FadeInDown.delay(200).duration(600) : undefined
-        }
+        entering={Platform.OS !== "web" ? FadeInDown.delay(150).duration(600) : undefined}
+        style={{ marginHorizontal: 20, marginTop: 8 }}
       >
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Your Progress
-        </Text>
+        <LarryTurtle message={larryMsg} isDark={isDark} />
+      </Animated.View>
+
+      <Animated.View
+        entering={Platform.OS !== "web" ? FadeInDown.delay(250).duration(600) : undefined}
+      >
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Progress</Text>
         <View style={styles.statsRow}>
-          <StatCard
-            icon="flame"
-            value={streak.currentStreak}
-            label="Day Streak"
-            color="#FF6B6B"
-            isDark={isDark}
-          />
-          <StatCard
-            icon="time"
-            value={streak.totalMinutes}
-            label="Total Min"
-            color={colors.tint}
-            isDark={isDark}
-          />
-          <StatCard
-            icon="heart"
-            value={streak.totalSessions}
-            label="Sessions"
-            color={colors.lavender}
-            isDark={isDark}
-          />
+          <StatCard icon="flame" value={streak.currentStreak} label="Day Streak" color="#FF6B6B" isDark={isDark} />
+          <StatCard icon="time" value={streak.totalMinutes} label="Total Min" color={colors.tint} isDark={isDark} />
+          <StatCard icon="heart" value={streak.totalSessions} label="Sessions" color={colors.lavender} isDark={isDark} />
         </View>
       </Animated.View>
 
       {recentMoods.length > 0 && (
         <Animated.View
-          entering={
-            Platform.OS !== "web"
-              ? FadeInRight.delay(400).duration(600)
-              : undefined
-          }
+          entering={Platform.OS !== "web" ? FadeInRight.delay(350).duration(600) : undefined}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Recent Moods
-          </Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Moods</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -288,26 +318,12 @@ export default function HomeScreen() {
                   key={entry.id}
                   style={[
                     styles.moodHistoryCard,
-                    {
-                      backgroundColor: colors.card,
-                      borderColor: colors.cardBorder,
-                    },
+                    { backgroundColor: colors.card, borderColor: colors.cardBorder },
                   ]}
                 >
-                  <Ionicons
-                    name={moodData?.icon as any}
-                    size={22}
-                    color={moodData?.color}
-                  />
-                  <Text
-                    style={[
-                      styles.moodHistoryLabel,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {new Date(entry.timestamp).toLocaleDateString("en-US", {
-                      weekday: "short",
-                    })}
+                  <Ionicons name={moodData?.icon as any} size={22} color={moodData?.color} />
+                  <Text style={[styles.moodHistoryLabel, { color: colors.textSecondary }]}>
+                    {new Date(entry.timestamp).toLocaleDateString("en-US", { weekday: "short" })}
                   </Text>
                 </View>
               );
@@ -317,157 +333,92 @@ export default function HomeScreen() {
       )}
 
       <Animated.View
-        entering={
-          Platform.OS !== "web"
-            ? FadeInDown.delay(500).duration(600)
-            : undefined
-        }
+        entering={Platform.OS !== "web" ? FadeInDown.delay(450).duration(600) : undefined}
       >
-        <View
-          style={[
-            styles.quoteCard,
-            { backgroundColor: colors.tealLight, borderColor: colors.cardBorder },
-          ]}
-        >
-          <Ionicons
-            name="sparkles"
-            size={20}
-            color={colors.tint}
-            style={{ marginBottom: 8 }}
-          />
-          <Text style={[styles.quoteText, { color: colors.text }]}>
-            "The present moment is filled with joy and happiness. If you are
-            attentive, you will see it."
-          </Text>
-          <Text style={[styles.quoteAuthor, { color: colors.textSecondary }]}>
-            - Thich Nhat Hanh
-          </Text>
-        </View>
+        <Pressable onPress={shuffleQuote}>
+          <View
+            style={[
+              styles.quoteCard,
+              { backgroundColor: colors.tealLight, borderColor: colors.cardBorder },
+            ]}
+          >
+            <View style={styles.quoteHeader}>
+              <Ionicons name="sparkles" size={20} color={colors.tint} />
+              <Ionicons name="shuffle" size={16} color={colors.textTertiary} />
+            </View>
+            <Text style={[styles.quoteText, { color: colors.text }]}>
+              "{quote.text}"
+            </Text>
+            <Text style={[styles.quoteAuthor, { color: colors.textSecondary }]}>
+              - {quote.author}
+            </Text>
+          </View>
+        </Pressable>
       </Animated.View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   headerGradient: {
-    marginHorizontal: 20,
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
+    marginHorizontal: 20, borderRadius: 20, padding: 24, marginBottom: 20,
   },
-  greeting: {
-    fontFamily: "Nunito_500Medium",
-    fontSize: 15,
-    marginBottom: 4,
+  headerRow: {
+    flexDirection: "row", alignItems: "center", gap: 12,
   },
-  headerTitle: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 26,
+  profileBtn: {
+    width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
   },
+  greeting: { fontFamily: "Nunito_500Medium", fontSize: 15, marginBottom: 4 },
+  headerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 26 },
   moodRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    marginBottom: 8,
+    flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, marginBottom: 8,
   },
   moodBtn: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 62,
-    height: 72,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "transparent",
-    gap: 4,
+    alignItems: "center", justifyContent: "center", width: 62, height: 72, borderRadius: 16, borderWidth: 2, borderColor: "transparent", gap: 4,
   },
-  moodLabel: {
-    fontFamily: "Nunito_600SemiBold",
-    fontSize: 11,
-  },
+  moodLabel: { fontFamily: "Nunito_600SemiBold", fontSize: 11 },
   moodSavedWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    marginBottom: 16,
-    paddingHorizontal: 20,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 8, paddingHorizontal: 20,
   },
-  moodSavedText: {
-    fontFamily: "Nunito_500Medium",
-    fontSize: 13,
+  moodSavedText: { fontFamily: "Nunito_500Medium", fontSize: 13 },
+  larryCard: {
+    borderRadius: 16, padding: 16, borderWidth: 1,
   },
+  larryRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  larryAvatar: {
+    width: 56, height: 56, borderRadius: 28, backgroundColor: "rgba(123,174,127,0.15)", alignItems: "center", justifyContent: "center",
+  },
+  larryEmoji: { fontSize: 32 },
+  larryTextWrap: { flex: 1 },
+  larryName: { fontFamily: "Nunito_700Bold", fontSize: 14, marginBottom: 2 },
+  larryMessage: { fontFamily: "Nunito_400Regular", fontSize: 13, lineHeight: 18 },
   sectionTitle: {
-    fontFamily: "Nunito_700Bold",
-    fontSize: 18,
-    marginHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 12,
+    fontFamily: "Nunito_700Bold", fontSize: 18, marginHorizontal: 20, marginTop: 24, marginBottom: 12,
   },
-  statsRow: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    gap: 10,
-  },
+  statsRow: { flexDirection: "row", paddingHorizontal: 20, gap: 10 },
   statCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 14,
-    alignItems: "center",
-    borderWidth: 1,
-    gap: 6,
+    flex: 1, borderRadius: 16, padding: 14, alignItems: "center", borderWidth: 1, gap: 6,
   },
   statIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center",
   },
-  statValue: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 22,
-  },
-  statLabel: {
-    fontFamily: "Nunito_500Medium",
-    fontSize: 11,
-  },
-  moodHistoryRow: {
-    paddingHorizontal: 20,
-    gap: 10,
-  },
+  statValue: { fontFamily: "Nunito_800ExtraBold", fontSize: 22 },
+  statLabel: { fontFamily: "Nunito_500Medium", fontSize: 11 },
+  moodHistoryRow: { paddingHorizontal: 20, gap: 10 },
   moodHistoryCard: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    width: 64,
-    gap: 6,
+    alignItems: "center", justifyContent: "center", padding: 12, borderRadius: 14, borderWidth: 1, width: 64, gap: 6,
   },
-  moodHistoryLabel: {
-    fontFamily: "Nunito_500Medium",
-    fontSize: 11,
-  },
+  moodHistoryLabel: { fontFamily: "Nunito_500Medium", fontSize: 11 },
   quoteCard: {
-    marginHorizontal: 20,
-    marginTop: 24,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
+    marginHorizontal: 20, marginTop: 24, borderRadius: 16, padding: 20, borderWidth: 1,
+  },
+  quoteHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8,
   },
   quoteText: {
-    fontFamily: "Nunito_600SemiBold",
-    fontSize: 15,
-    fontStyle: "italic",
-    lineHeight: 22,
-    marginBottom: 8,
+    fontFamily: "Nunito_600SemiBold", fontSize: 15, fontStyle: "italic", lineHeight: 22, marginBottom: 8,
   },
-  quoteAuthor: {
-    fontFamily: "Nunito_500Medium",
-    fontSize: 13,
-    textAlign: "right",
-  },
+  quoteAuthor: { fontFamily: "Nunito_500Medium", fontSize: 13, textAlign: "right" },
 });

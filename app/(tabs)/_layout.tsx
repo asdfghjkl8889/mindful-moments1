@@ -15,26 +15,20 @@ function NativeTabLayout() {
         <Label>Home</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="meditate">
-        <Icon
-          sf={{
-            default: "leaf",
-            selected: "leaf.fill",
-          }}
-        />
+        <Icon sf={{ default: "leaf", selected: "leaf.fill" }} />
         <Label>Meditate</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="journal">
-        <Icon
-          sf={{
-            default: "book",
-            selected: "book.fill",
-          }}
-        />
+        <Icon sf={{ default: "book", selected: "book.fill" }} />
         <Label>Journal</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: "person", selected: "person.fill" }} />
-        <Label>Profile</Label>
+      <NativeTabs.Trigger name="eating">
+        <Icon sf={{ default: "fork.knife", selected: "fork.knife" }} />
+        <Label>Eating</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="games">
+        <Icon sf={{ default: "gamecontroller", selected: "gamecontroller.fill" }} />
+        <Label>Games</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -55,7 +49,7 @@ function ClassicTabLayout() {
         tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarLabelStyle: {
           fontFamily: "Nunito_600SemiBold",
-          fontSize: 11,
+          fontSize: 10,
         },
         tabBarStyle: {
           position: "absolute",
@@ -118,11 +112,20 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="eating"
         options={{
-          title: "Profile",
+          title: "Eating",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="restaurant" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="games"
+        options={{
+          title: "Games",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="game-controller" size={size} color={color} />
           ),
         }}
       />

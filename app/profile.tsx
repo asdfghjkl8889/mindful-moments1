@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { storage, ProfileData, StreakData } from "@/lib/storage";
 
@@ -105,6 +106,17 @@ export default function ProfileScreen() {
         }
         style={styles.headerGradient}
       >
+        <View style={styles.closeRow}>
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => [
+              styles.closeBtn,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Ionicons name="close" size={24} color={colors.text} />
+          </Pressable>
+        </View>
         <View
           style={[
             styles.avatarCircle,
@@ -274,9 +286,17 @@ const styles = StyleSheet.create({
   },
   headerGradient: {
     alignItems: "center",
-    paddingTop: 24,
+    paddingTop: 8,
     paddingBottom: 24,
     paddingHorizontal: 20,
+  },
+  closeRow: {
+    alignSelf: "stretch",
+    alignItems: "flex-end",
+    marginBottom: 8,
+  },
+  closeBtn: {
+    padding: 4,
   },
   avatarCircle: {
     width: 96,
