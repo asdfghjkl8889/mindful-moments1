@@ -323,8 +323,9 @@ export default function HomeScreen() {
   const recentMoods = allMoods.slice(0, 7);
 
   return (
+    <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={styles.container}
       contentContainerStyle={{
         paddingTop: insets.top + webTopInset + 16,
         paddingBottom: 120,
@@ -470,11 +471,49 @@ export default function HomeScreen() {
         </Animated.View>
       )}
     </ScrollView>
+
+    <Pressable
+      onPress={() => router.push("/emergency")}
+      style={({ pressed }) => [
+        styles.emergencyFab,
+        {
+          bottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 90,
+          opacity: pressed ? 0.88 : 1,
+          transform: [{ scale: pressed ? 0.95 : 1 }],
+        },
+      ]}
+    >
+      <Ionicons name="shield-checkmark" size={18} color="#fff" />
+      <Text style={styles.emergencyFabText}>Crisis Support</Text>
+    </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
   container: { flex: 1 },
+  emergencyFab: {
+    position: "absolute",
+    right: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    backgroundColor: "#EF5350",
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 24,
+    shadowColor: "#EF5350",
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  emergencyFabText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 13,
+    color: "#fff",
+  },
   headerGradient: {
     marginHorizontal: 20, borderRadius: 20, padding: 24, marginBottom: 20,
   },
