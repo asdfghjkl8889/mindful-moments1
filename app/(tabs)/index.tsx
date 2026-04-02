@@ -21,6 +21,7 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  withDelay,
   Easing,
 } from "react-native-reanimated";
 import { router } from "expo-router";
@@ -102,6 +103,157 @@ function StatCard({
     </View>
   );
 }
+
+function PanicButton() {
+  const pulse1 = useSharedValue(1);
+  const pulse2 = useSharedValue(1);
+  const pulse1Opacity = useSharedValue(0.5);
+  const pulse2Opacity = useSharedValue(0.35);
+
+  useEffect(() => {
+    pulse1.value = withRepeat(
+      withSequence(
+        withTiming(1.55, { duration: 1200, easing: Easing.out(Easing.ease) }),
+        withTiming(1, { duration: 0 }),
+      ),
+      -1,
+      false,
+    );
+    pulse1Opacity.value = withRepeat(
+      withSequence(
+        withTiming(0, { duration: 1200, easing: Easing.out(Easing.ease) }),
+        withTiming(0.5, { duration: 0 }),
+      ),
+      -1,
+      false,
+    );
+    pulse2.value = withDelay(
+      450,
+      withRepeat(
+        withSequence(
+          withTiming(1.55, { duration: 1200, easing: Easing.out(Easing.ease) }),
+          withTiming(1, { duration: 0 }),
+        ),
+        -1,
+        false,
+      ),
+    );
+    pulse2Opacity.value = withDelay(
+      450,
+      withRepeat(
+        withSequence(
+          withTiming(0, { duration: 1200, easing: Easing.out(Easing.ease) }),
+          withTiming(0.35, { duration: 0 }),
+        ),
+        -1,
+        false,
+      ),
+    );
+  }, []);
+
+  const ring1Style = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse1.value }],
+    opacity: pulse1Opacity.value,
+  }));
+  const ring2Style = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse2.value }],
+    opacity: pulse2Opacity.value,
+  }));
+
+  const handlePress = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
+    router.push("/game/breathing");
+  };
+
+  return (
+    <View style={panicStyles.wrapper}>
+      <Text style={panicStyles.label}>Feeling anxious right now?</Text>
+      <View style={panicStyles.circleWrap}>
+        <Animated.View style={[panicStyles.ring, ring1Style]} />
+        <Animated.View style={[panicStyles.ring, ring2Style]} />
+        <Pressable
+          onPress={handlePress}
+          style={({ pressed }) => [
+            panicStyles.btn,
+            { transform: [{ scale: pressed ? 0.93 : 1 }] },
+          ]}
+        >
+          <Ionicons name="leaf" size={30} color="#fff" />
+          <Text style={panicStyles.btnLine1}>Breathe</Text>
+          <Text style={panicStyles.btnLine2}>Now</Text>
+        </Pressable>
+      </View>
+      <Text style={panicStyles.sub}>Tap for an instant calming exercise</Text>
+    </View>
+  );
+}
+
+const panicStyles = StyleSheet.create({
+  wrapper: {
+    alignItems: "center",
+    marginHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingVertical: 20,
+    backgroundColor: "#FFF5F5",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#FFCDD2",
+  },
+  label: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 15,
+    color: "#C62828",
+    marginBottom: 18,
+  },
+  circleWrap: {
+    width: 120,
+    height: 120,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ring: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#EF5350",
+  },
+  btn: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#EF5350",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#EF5350",
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+    gap: 2,
+  },
+  btnLine1: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 15,
+    color: "#fff",
+    lineHeight: 17,
+  },
+  btnLine2: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 15,
+    color: "#fff",
+    lineHeight: 17,
+  },
+  sub: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 12,
+    color: "#E57373",
+    marginTop: 14,
+  },
+});
 
 function LarryTurtle({ message, isDark }: { message: string; isDark: boolean }) {
   const colors = isDark ? Colors.dark : Colors.light;
@@ -385,8 +537,14 @@ export default function HomeScreen() {
       )}
 
       <Animated.View
+        entering={Platform.OS !== "web" ? FadeInDown.delay(120).duration(600) : undefined}
+      >
+        <PanicButton />
+      </Animated.View>
+
+      <Animated.View
         entering={Platform.OS !== "web" ? FadeInDown.delay(150).duration(600) : undefined}
-        style={{ marginHorizontal: 20, marginTop: 8 }}
+        style={{ marginHorizontal: 20, marginTop: 12 }}
       >
         <LarryTurtle message={larryMsg} isDark={isDark} />
       </Animated.View>
