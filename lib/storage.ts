@@ -8,6 +8,8 @@ const KEYS = {
   PROFILE: "mindful_profile",
   EATING_LOG: "mindful_eating",
   GAME_SCORES: "mindful_game_scores",
+  CHALLENGES: "mindful_challenges",
+  WEEK_COURSE: "mindful_week_course",
 };
 
 export interface MoodEntry {
@@ -64,6 +66,18 @@ export interface GameScore {
   game: string;
   score: number;
   timestamp: number;
+}
+
+export interface ChallengeData {
+  xp: number;
+  completedToday: string[];
+  badgesEarned: string[];
+  lastResetDate: string;
+}
+
+export interface WeekCourseProgress {
+  completedSessions: string[];
+  startedDate: string;
 }
 
 function generateId(): string {
@@ -421,5 +435,25 @@ export const storage = {
     scores.unshift(entry);
     await AsyncStorage.setItem(KEYS.GAME_SCORES, JSON.stringify(scores));
     return entry;
+  },
+
+  async getChallengeData(): Promise<ChallengeData> {
+    const raw = await AsyncStorage.getItem(KEYS.CHALLENGES);
+    if (!raw) return { xp: 0, completedToday: [], badgesEarned: [], lastResetDate: "" };
+    return JSON.parse(raw);
+  },
+
+  async saveChallengeData(data: ChallengeData): Promise<void> {
+    await AsyncStorage.setItem(KEYS.CHALLENGES, JSON.stringify(data));
+  },
+
+  async getWeekCourseProgress(): Promise<WeekCourseProgress> {
+    const raw = await AsyncStorage.getItem(KEYS.WEEK_COURSE);
+    if (!raw) return { completedSessions: [], startedDate: "" };
+    return JSON.parse(raw);
+  },
+
+  async saveWeekCourseProgress(data: WeekCourseProgress): Promise<void> {
+    await AsyncStorage.setItem(KEYS.WEEK_COURSE, JSON.stringify(data));
   },
 };

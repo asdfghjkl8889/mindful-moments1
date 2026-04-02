@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,7 +9,6 @@ import {
   useColorScheme,
   Platform,
   Modal,
-  FlatList,
   Alert,
   KeyboardAvoidingView,
   RefreshControl,
@@ -21,6 +20,174 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import Colors from "@/constants/colors";
 import { storage, EatingEntry, EATING_TIPS, getLarryMessage } from "@/lib/storage";
+
+const TIMER_DURATIONS = [
+  { label: "10 min", seconds: 600 },
+  { label: "20 min", seconds: 1200 },
+  { label: "30 min", seconds: 1800 },
+];
+
+const EATING_PROMPTS = [
+  { at: 0, text: "Take 3 deep breaths before you begin. Notice the colors, aromas, and textures of your food." },
+  { at: 120, text: "Put your utensil down between bites. Take a moment to truly taste what's in your mouth." },
+  { at: 300, text: "Check in with your hunger. Are you eating because you're hungry or out of habit?" },
+  { at: 480, text: "Notice the flavors — sweet, salty, sour, umami. What stands out?" },
+  { at: 660, text: "Slow down. Chew each bite 20 times. Feel the texture change." },
+  { at: 840, text: "Pause and check your fullness level from 1-10. Are you satisfied yet?" },
+  { at: 1020, text: "Express gratitude — for this food, for the hands that made it, for your body that uses it." },
+  { at: 1140, text: "Take your last bites with full presence. Notice when you feel comfortably full." },
+];
+
+function MindfulEatingTimer({ colors }: { colors: any }) {
+  const [selectedDuration, setSelectedDuration] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(TIMER_DURATIONS[1].seconds);
+  const [isRunning, setIsRunning] = useState(false);
+  const [currentPrompt, setCurrentPrompt] = useState(EATING_PROMPTS[0].text);
+  const [showTimer, setShowTimer] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedRef = useRef(0);
+
+  const totalSeconds = TIMER_DURATIONS[selectedDuration].seconds;
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const getPromptForElapsed = (elapsed: number) => {
+    let best = EATING_PROMPTS[0].text;
+    for (const p of EATING_PROMPTS) {
+      if (elapsed >= p.at) best = p.text;
+    }
+    return best;
+  };
+
+  const startTimer = () => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsRunning(true);
+    elapsedRef.current = totalSeconds - timeLeft;
+    intervalRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current!);
+          setIsRunning(false);
+          if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setCurrentPrompt("Wonderful! You've completed a mindful meal. Notice how you feel.");
+          return 0;
+        }
+        elapsedRef.current += 1;
+        setCurrentPrompt(getPromptForElapsed(elapsedRef.current));
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const pauseTimer = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setIsRunning(false);
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const resetTimer = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setIsRunning(false);
+    elapsedRef.current = 0;
+    setTimeLeft(TIMER_DURATIONS[selectedDuration].seconds);
+    setCurrentPrompt(EATING_PROMPTS[0].text);
+  };
+
+  useEffect(() => {
+    resetTimer();
+  }, [selectedDuration]);
+
+  useEffect(() => {
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
+
+  const progress = 1 - timeLeft / totalSeconds;
+
+  if (!showTimer) {
+    return (
+      <Pressable
+        onPress={() => setShowTimer(true)}
+        style={[styles.timerBanner, { backgroundColor: "#E0F7FA", borderColor: colors.tint + "40" }]}
+      >
+        <LinearGradient colors={["#E0F7FA", "#E8F5E9"]} style={styles.timerBannerGrad}>
+          <Ionicons name="timer" size={28} color={colors.tint} />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.timerBannerTitle, { color: colors.text }]}>Mindful Eating Timer</Text>
+            <Text style={[styles.timerBannerSub, { color: colors.textSecondary }]}>
+              Guided prompts while you eat · 10–30 min
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+        </LinearGradient>
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={[styles.timerCard, { backgroundColor: "#E8F5E9", borderColor: colors.tint + "30" }]}>
+      <View style={styles.timerHeader}>
+        <Ionicons name="timer" size={20} color={colors.tint} />
+        <Text style={[styles.timerTitle, { color: colors.text }]}>Mindful Eating Timer</Text>
+        <Pressable onPress={() => { resetTimer(); setShowTimer(false); }}>
+          <Ionicons name="close" size={20} color={colors.textTertiary} />
+        </Pressable>
+      </View>
+
+      <View style={styles.durationRow}>
+        {TIMER_DURATIONS.map((d, i) => (
+          <Pressable
+            key={d.label}
+            onPress={() => !isRunning && setSelectedDuration(i)}
+            style={[
+              styles.durationBtn,
+              { backgroundColor: selectedDuration === i ? colors.tint : colors.card, borderColor: selectedDuration === i ? colors.tint : colors.cardBorder },
+            ]}
+          >
+            <Text style={[styles.durationBtnText, { color: selectedDuration === i ? "#fff" : colors.textSecondary }]}>{d.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.timerDisplay}>
+        <Text style={[styles.timerTime, { color: timeLeft === 0 ? "#66BB6A" : colors.text }]}>
+          {timeLeft === 0 ? "Done!" : formatTime(timeLeft)}
+        </Text>
+        <View style={[styles.timerProgressBg, { backgroundColor: colors.cardBorder }]}>
+          <View style={[styles.timerProgressFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: colors.tint }]} />
+        </View>
+      </View>
+
+      <View style={[styles.promptBox, { backgroundColor: "rgba(255,255,255,0.7)" }]}>
+        <Ionicons name="leaf" size={16} color={colors.tint} />
+        <Text style={[styles.promptText, { color: colors.text }]}>{currentPrompt}</Text>
+      </View>
+
+      <View style={styles.timerControls}>
+        {!isRunning && timeLeft > 0 && (
+          <Pressable onPress={startTimer} style={[styles.timerBtn, { backgroundColor: colors.tint }]}>
+            <Ionicons name="play" size={20} color="#fff" />
+            <Text style={styles.timerBtnText}>{timeLeft === totalSeconds ? "Start" : "Resume"}</Text>
+          </Pressable>
+        )}
+        {isRunning && (
+          <Pressable onPress={pauseTimer} style={[styles.timerBtn, { backgroundColor: "#FF8A65" }]}>
+            <Ionicons name="pause" size={20} color="#fff" />
+            <Text style={styles.timerBtnText}>Pause</Text>
+          </Pressable>
+        )}
+        {timeLeft !== totalSeconds && (
+          <Pressable onPress={resetTimer} style={[styles.timerBtnOutline, { borderColor: colors.cardBorder }]}>
+            <Ionicons name="refresh" size={18} color={colors.textSecondary} />
+          </Pressable>
+        )}
+      </View>
+    </View>
+  );
+}
 
 function TipCard({
   tip,
@@ -212,6 +379,10 @@ export default function EatingScreen() {
         contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        <View style={{ paddingHorizontal: 20, paddingTop: 4 }}>
+          <MindfulEatingTimer colors={colors} />
+        </View>
+
         {showTips && (
           <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
             <View style={styles.larryBanner}>
@@ -373,6 +544,28 @@ export default function EatingScreen() {
 }
 
 const styles = StyleSheet.create({
+  timerBanner: { borderRadius: 16, marginBottom: 12, borderWidth: 1, overflow: "hidden" },
+  timerBannerGrad: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
+  timerBannerTitle: { fontFamily: "Nunito_700Bold", fontSize: 15 },
+  timerBannerSub: { fontFamily: "Nunito_400Regular", fontSize: 12, marginTop: 2 },
+  timerCard: {
+    borderRadius: 16, padding: 16, borderWidth: 1, marginBottom: 12, gap: 12,
+  },
+  timerHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  timerTitle: { fontFamily: "Nunito_700Bold", fontSize: 15, flex: 1 },
+  durationRow: { flexDirection: "row", gap: 8 },
+  durationBtn: { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: "center", borderWidth: 1 },
+  durationBtnText: { fontFamily: "Nunito_600SemiBold", fontSize: 13 },
+  timerDisplay: { alignItems: "center", gap: 10 },
+  timerTime: { fontFamily: "Nunito_800ExtraBold", fontSize: 48 },
+  timerProgressBg: { width: "100%", height: 8, borderRadius: 4, overflow: "hidden" },
+  timerProgressFill: { height: "100%", borderRadius: 4 },
+  promptBox: { flexDirection: "row", alignItems: "flex-start", gap: 8, borderRadius: 12, padding: 12 },
+  promptText: { fontFamily: "Nunito_400Regular", fontSize: 13, lineHeight: 18, flex: 1, fontStyle: "italic" },
+  timerControls: { flexDirection: "row", gap: 10 },
+  timerBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 12, paddingVertical: 12 },
+  timerBtnText: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#fff" },
+  timerBtnOutline: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 1 },
   container: { flex: 1 },
   header: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",

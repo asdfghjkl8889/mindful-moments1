@@ -35,6 +35,13 @@ A mindfulness and wellness mobile app built with Expo React Native. Converted fr
 - Stack routes: Game screens (/game/breathing, /game/memory, /game/focus)
 
 ## Recent Changes
+- Apr 2026: Added Mindful Eating Timer (10/20/30 min) with 8 guided prompts to Eating tab
+- Apr 2026: Created Challenges screen (/challenges) — Duolingo-style XP/levels (Seed→Forest), 5 daily missions, weekly quest, 6 achievement badges
+- Apr 2026: Created 7-Day Wellness Course (/course-week) — 5+ sessions/day per day (sunrise, midday, mid-afternoon, sunset, evening) with meals, exercise, environment, mindset themes. Progress checkboxes persisted.
+- Apr 2026: Created Negative Thoughts / CBT screen (/negative-thoughts) — 3-step thought record (identify, evidence, reframe), 8 cognitive distortions, saved history
+- Apr 2026: Added Tools tab to Explore (default) with grid cards linking to all wellness tools + games
+- Apr 2026: Added pulsing red panic button to Home screen → breathing exercise
+- Apr 2026: Added Crisis Support modal (/emergency) with 6 hotlines, 5-4-3-2-1 grounding, breathing tips
 - Feb 2026: Added mood calendar to Home screen with monthly view and color-coded moods
 - Feb 2026: Expanded quotes to 100+ with 7 categories (mindfulness, peace, strength, gratitude, wisdom, nature, love)
 - Feb 2026: Built Daily Inspiration modal with category filtering, navigation, shuffle, share

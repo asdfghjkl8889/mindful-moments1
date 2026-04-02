@@ -17,7 +17,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 
-type ExploreSection = "resources" | "courses" | "games";
+type ExploreSection = "resources" | "courses" | "games" | "tools";
 
 const RESOURCE_CATEGORIES = [
   { key: "sleep", label: "Sleep & Music", icon: "musical-notes" },
@@ -202,13 +202,14 @@ export default function ExploreScreen() {
   const isDark = colorScheme === "dark";
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
-  const [activeSection, setActiveSection] = useState<ExploreSection>("resources");
+  const [activeSection, setActiveSection] = useState<ExploreSection>("tools");
   const [resourceCategory, setResourceCategory] = useState("sleep");
   const [selectedCourse, setSelectedCourse] = useState<(typeof COURSES)[0] | null>(null);
 
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
   const sections: { key: ExploreSection; label: string; icon: string }[] = [
+    { key: "tools", label: "Tools", icon: "apps" },
     { key: "resources", label: "Resources", icon: "library" },
     { key: "courses", label: "Courses", icon: "school" },
     { key: "games", label: "Games", icon: "game-controller" },
@@ -385,6 +386,41 @@ export default function ExploreScreen() {
         </Animated.View>
       )}
 
+      {activeSection === "tools" && (
+        <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
+          <View style={styles.toolsGrid}>
+            {[
+              { title: "Challenges", desc: "Daily missions, XP & badges", icon: "trophy", color: "#FFD54F", bg: "#FFF8E1", route: "/challenges" },
+              { title: "7-Day Course", desc: "Full wellness week program", icon: "calendar", color: "#4DB6AC", bg: "#E0F7FA", route: "/course-week" },
+              { title: "Reframe Thoughts", desc: "CBT thought challenging tool", icon: "bulb", color: "#FF8A80", bg: "#FCE4EC", route: "/negative-thoughts" },
+              { title: "Breathing Game", desc: "Calm anxiety instantly", icon: "leaf", color: "#66BB6A", bg: "#E8F5E9", route: "/game/breathing" },
+              { title: "Zen Memory", desc: "Sharpen focus with cards", icon: "grid", color: "#B39DDB", bg: "#F3E5F5", route: "/game/memory" },
+              { title: "Focus Tap", desc: "Train concentration", icon: "eye", color: "#FF8A65", bg: "#FBE9E7", route: "/game/focus" },
+            ].map((tool, i) => (
+              <Animated.View
+                key={tool.title}
+                entering={Platform.OS !== "web" ? FadeInDown.delay(i * 60).duration(400) : undefined}
+                style={styles.toolCard}
+              >
+                <Pressable
+                  onPress={() => { router.push(tool.route as any); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
+                  style={({ pressed }) => [
+                    styles.toolCardInner,
+                    { backgroundColor: tool.bg, opacity: pressed ? 0.85 : 1 },
+                  ]}
+                >
+                  <View style={[styles.toolIconWrap, { backgroundColor: tool.color + "30" }]}>
+                    <Ionicons name={tool.icon as any} size={28} color={tool.color} />
+                  </View>
+                  <Text style={[styles.toolTitle, { color: "#1A1A1A" }]}>{tool.title}</Text>
+                  <Text style={[styles.toolDesc, { color: "#616161" }]}>{tool.desc}</Text>
+                </Pressable>
+              </Animated.View>
+            ))}
+          </View>
+        </Animated.View>
+      )}
+
       {activeSection === "games" && (
         <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
           <View style={styles.gamesList}>
@@ -531,4 +567,16 @@ const styles = StyleSheet.create({
   },
   larryBannerName: { fontFamily: "Nunito_700Bold", fontSize: 14, marginBottom: 2 },
   larryBannerMsg: { fontFamily: "Nunito_400Regular", fontSize: 12, lineHeight: 17 },
+  toolsGrid: {
+    flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 20, gap: 12,
+  },
+  toolCard: { width: "47%", flexGrow: 1 },
+  toolCardInner: {
+    borderRadius: 18, padding: 16, alignItems: "center", gap: 8, minHeight: 130, justifyContent: "center",
+  },
+  toolIconWrap: {
+    width: 56, height: 56, borderRadius: 18, alignItems: "center", justifyContent: "center",
+  },
+  toolTitle: { fontFamily: "Nunito_700Bold", fontSize: 14, textAlign: "center" },
+  toolDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, textAlign: "center", lineHeight: 15 },
 });

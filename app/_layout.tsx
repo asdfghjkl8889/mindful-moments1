@@ -48,6 +48,18 @@ function RootLayoutNav() {
           presentation: "modal",
         }}
       />
+      <Stack.Screen
+        name="challenges"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="course-week"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="negative-thoughts"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
