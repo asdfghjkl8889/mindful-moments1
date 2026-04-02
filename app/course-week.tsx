@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import * as Speech from "expo-speech";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
@@ -177,6 +178,28 @@ export default function CourseWeekScreen() {
 
   const [progress, setProgress] = useState<WeekCourseProgress>({ completedSessions: [], startedDate: "" });
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => { Speech.stop(); };
+  }, []);
+
+  const speakSession = (session: Session) => {
+    Speech.stop();
+    if (speakingId === session.id) {
+      setSpeakingId(null);
+      return;
+    }
+    setSpeakingId(session.id);
+    const script = `${session.title}. ${session.description}`;
+    Speech.speak(script, {
+      rate: 0.82,
+      pitch: 1.0,
+      onDone: () => setSpeakingId(null),
+      onStopped: () => setSpeakingId(null),
+      onError: () => setSpeakingId(null),
+    });
+  };
 
   const loadProgress = useCallback(async () => {
     const p = await storage.getWeekCourseProgress();
@@ -293,6 +316,19 @@ export default function CourseWeekScreen() {
                           <Text style={[styles.sessionTitle, { color: colors.text }]}>{session.title}</Text>
                           <Text style={[styles.sessionDuration, { color: colors.textTertiary }]}>{session.duration}</Text>
                           <Text style={[styles.sessionDesc, { color: colors.textSecondary }]}>{session.description}</Text>
+                          <Pressable
+                            onPress={() => speakSession(session)}
+                            style={[styles.listenBtn, { backgroundColor: speakingId === session.id ? typeStyle.icon + "20" : colors.cardBorder + "60" }]}
+                          >
+                            <Ionicons
+                              name={speakingId === session.id ? "stop-circle" : "volume-high"}
+                              size={13}
+                              color={speakingId === session.id ? typeStyle.icon : colors.textSecondary}
+                            />
+                            <Text style={[styles.listenBtnText, { color: speakingId === session.id ? typeStyle.icon : colors.textSecondary }]}>
+                              {speakingId === session.id ? "Stop" : "Listen"}
+                            </Text>
+                          </Pressable>
                         </View>
                         <Pressable
                           onPress={() => toggleSession(session.id)}
@@ -365,4 +401,10 @@ const styles = StyleSheet.create({
     width: 26, height: 26, borderRadius: 13, borderWidth: 2,
     alignItems: "center", justifyContent: "center", marginTop: 4,
   },
+  listenBtn: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 10, marginTop: 6,
+  },
+  listenBtnText: { fontFamily: "Nunito_600SemiBold", fontSize: 11 },
 });

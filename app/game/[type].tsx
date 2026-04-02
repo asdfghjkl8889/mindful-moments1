@@ -7,12 +7,14 @@ import {
   useColorScheme,
   Platform,
   Dimensions,
+  Switch,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import * as Speech from "expo-speech";
 import Animated, {
   FadeIn,
   useSharedValue,
@@ -25,13 +27,53 @@ import Animated, {
 import Colors from "@/constants/colors";
 import { storage } from "@/lib/storage";
 
+const BREATH_VOICE_CUES: Record<string, string[]> = {
+  intro: [
+    "Welcome to your breathing exercise. Let's calm your nervous system together.",
+    "Find a comfortable position. You can sit or lie down. Let's begin.",
+    "Ready to breathe? Follow the circle and let your body relax.",
+  ],
+  inhale: [
+    "Breathe in slowly and deeply.",
+    "Inhale through your nose, filling your lungs completely.",
+    "Breathe in... let your belly expand.",
+  ],
+  hold: [
+    "Hold gently.",
+    "Hold your breath softly.",
+    "Pause and be still.",
+  ],
+  exhale: [
+    "Breathe out slowly.",
+    "Exhale fully through your mouth.",
+    "Release and let go.",
+  ],
+  complete: [
+    "Wonderful. Six cycles complete. Notice how calm you feel.",
+    "Well done. Your nervous system is settling. Carry this calm with you.",
+  ],
+};
+
+function pickCue(group: string, index: number) {
+  const arr = BREATH_VOICE_CUES[group] ?? [];
+  return arr[index % arr.length] ?? "";
+}
+
 function BreathingGame({ colors, onBack }: { colors: any; onBack: () => void }) {
   const [phase, setPhase] = useState<"idle" | "inhale" | "hold" | "exhale">("idle");
   const [cycles, setCycles] = useState(0);
   const [isActive, setIsActive] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cycleRef = useRef(0);
   const scale = useSharedValue(1);
   const circleOpacity = useSharedValue(0.3);
+
+  const speak = useCallback((group: string, index: number = 0) => {
+    if (!voiceEnabled) return;
+    const text = pickCue(group, index);
+    if (text) Speech.speak(text, { rate: 0.82, pitch: 1.0 });
+  }, [voiceEnabled]);
 
   const breatheStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -39,35 +81,40 @@ function BreathingGame({ colors, onBack }: { colors: any; onBack: () => void }) 
   }));
 
   const startBreathing = () => {
+    cycleRef.current = 0;
     setIsActive(true);
     setCycles(0);
-    runCycle();
+    speak("intro", Math.floor(Math.random() * 3));
+    setTimeout(() => runCycle(0), 2000);
   };
 
-  const runCycle = () => {
+  const runCycle = (cycleIndex: number) => {
     setPhase("inhale");
+    speak("inhale", cycleIndex);
     scale.value = withTiming(1.4, { duration: 4000, easing: Easing.inOut(Easing.ease) });
     circleOpacity.value = withTiming(0.7, { duration: 4000 });
 
     timerRef.current = setTimeout(() => {
       setPhase("hold");
+      speak("hold", cycleIndex);
       timerRef.current = setTimeout(() => {
         setPhase("exhale");
+        speak("exhale", cycleIndex);
         scale.value = withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.ease) });
         circleOpacity.value = withTiming(0.3, { duration: 4000 });
         timerRef.current = setTimeout(() => {
-          setCycles((prev) => {
-            const next = prev + 1;
-            if (next < 6) {
-              runCycle();
-            } else {
-              setIsActive(false);
-              setPhase("idle");
-              if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              storage.addGameScore("breathing", next);
-            }
-            return next;
-          });
+          const next = cycleIndex + 1;
+          cycleRef.current = next;
+          setCycles(next);
+          if (next < 6) {
+            runCycle(next);
+          } else {
+            setIsActive(false);
+            setPhase("idle");
+            if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            storage.addGameScore("breathing", next);
+            speak("complete", 0);
+          }
         }, 4000);
       }, 4000);
     }, 4000);
@@ -77,6 +124,7 @@ function BreathingGame({ colors, onBack }: { colors: any; onBack: () => void }) 
     setIsActive(false);
     setPhase("idle");
     if (timerRef.current) clearTimeout(timerRef.current);
+    Speech.stop();
     scale.value = withTiming(1, { duration: 300 });
     circleOpacity.value = withTiming(0.3, { duration: 300 });
   };
@@ -84,15 +132,27 @@ function BreathingGame({ colors, onBack }: { colors: any; onBack: () => void }) 
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      Speech.stop();
     };
   }, []);
 
-  const phaseText = phase === "inhale" ? "Breathe In" : phase === "hold" ? "Hold" : phase === "exhale" ? "Breathe Out" : "Ready";
+  const phaseText = phase === "inhale" ? "Breathe In" : phase === "hold" ? "Hold" : phase === "exhale" ? "Breathe Out" : cycles === 6 ? "Complete ✓" : "Ready";
 
   return (
     <View style={styles.gameContainer}>
       <Text style={[styles.gameTitle, { color: colors.text }]}>Breathing Exercise</Text>
       <Text style={[styles.gameSub, { color: colors.textSecondary }]}>4-4-4 calming pattern</Text>
+
+      <View style={[styles.voiceToggleRow, { borderColor: colors.cardBorder }]}>
+        <Ionicons name="mic" size={18} color={voiceEnabled ? colors.tint : colors.textSecondary} />
+        <Text style={[styles.voiceToggleLabel, { color: colors.text }]}>Voice Guidance</Text>
+        <Switch
+          value={voiceEnabled}
+          onValueChange={(val) => { setVoiceEnabled(val); if (!val) Speech.stop(); }}
+          trackColor={{ false: colors.cardBorder, true: colors.tint + "60" }}
+          thumbColor={voiceEnabled ? colors.tint : "#ccc"}
+        />
+      </View>
 
       <View style={styles.breathArea}>
         <Animated.View
@@ -100,7 +160,7 @@ function BreathingGame({ colors, onBack }: { colors: any; onBack: () => void }) 
         />
         <Text style={[styles.phaseText, { color: colors.text }]}>{phaseText}</Text>
         {isActive && (
-          <Text style={[styles.cycleText, { color: colors.textSecondary }]}>Cycle {cycles + 1} of 6</Text>
+          <Text style={[styles.cycleText, { color: colors.textSecondary }]}>Cycle {Math.min(cycles + 1, 6)} of 6</Text>
         )}
       </View>
 
@@ -390,6 +450,11 @@ const styles = StyleSheet.create({
   },
   phaseText: { fontFamily: "Nunito_800ExtraBold", fontSize: 22 },
   cycleText: { fontFamily: "Nunito_500Medium", fontSize: 14, marginTop: 8 },
+  voiceToggleRow: {
+    flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1,
+    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8, marginBottom: 8, alignSelf: "stretch",
+  },
+  voiceToggleLabel: { fontFamily: "Nunito_600SemiBold", fontSize: 13, flex: 1 },
   gameControls: { paddingBottom: 100, width: "100%" },
   gameBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
