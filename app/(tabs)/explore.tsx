@@ -393,9 +393,9 @@ export default function ExploreScreen() {
               { title: "Challenges", desc: "Daily missions, XP & badges", icon: "trophy", color: "#FFD54F", bg: "#FFF8E1", route: "/challenges" },
               { title: "7-Day Course", desc: "Full wellness week program", icon: "calendar", color: "#4DB6AC", bg: "#E0F7FA", route: "/course-week" },
               { title: "Reframe Thoughts", desc: "CBT thought challenging tool", icon: "bulb", color: "#FF8A80", bg: "#FCE4EC", route: "/negative-thoughts" },
-              { title: "Breathing Game", desc: "Calm anxiety instantly", icon: "leaf", color: "#66BB6A", bg: "#E8F5E9", route: "/game/breathing" },
-              { title: "Zen Memory", desc: "Sharpen focus with cards", icon: "grid", color: "#B39DDB", bg: "#F3E5F5", route: "/game/memory" },
-              { title: "Focus Tap", desc: "Train concentration", icon: "eye", color: "#FF8A65", bg: "#FBE9E7", route: "/game/focus" },
+              { title: "Mood Garden", desc: "Your emotions as a living garden", icon: "flower", color: "#66BB6A", bg: "#E8F5E9", route: "/mood-garden" },
+              { title: "Quick Calm", desc: "60-second mindfulness resets", icon: "flash", color: "#B39DDB", bg: "#F3E5F5", route: "/quick-calm" },
+              { title: "Mindful Games", desc: "Breathing, memory & focus games", icon: "game-controller", color: "#FF8A65", bg: "#FBE9E7", route: "/games" },
             ].map((tool, i) => (
               <Animated.View
                 key={tool.title}

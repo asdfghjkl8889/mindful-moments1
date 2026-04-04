@@ -13,7 +13,7 @@ A mindfulness and wellness mobile app built with Expo React Native. Converted fr
 ## Key Features
 - **Home**: Mood tracking (5 moods), daily greeting, streak/progress stats, mood history, inspirational quotes, mood calendar with monthly view, Larry the Turtle mascot
 - **Meditate**: Timer with breathing animation, 1-20 min durations, pause/resume, session tracking, guided voiceovers using expo-speech (5 sessions: Calm Mind, Body Scan, Gratitude, Sleep, Focus)
-- **Journal**: Gratitude entries (3 items) + reflection text, compose modal, long-press to delete
+- **Journal**: Two tabs — Entries (gratitude + reflection + photo) and Gratitude Wall (photo tile grid, import from journal or add standalone tiles)
 - **Eating**: Mindful eating tips and guidance
 - **Explore**: Resources (20+ external links in 5 categories), Courses (6 comprehensive courses with lessons), Games (Breathing Exercise, Zen Memory, Focus Tap)
 - **Daily Inspiration**: Modal with 100+ quotes across 7 categories, navigation arrows, shuffle, share, category filtering
@@ -35,6 +35,11 @@ A mindfulness and wellness mobile app built with Expo React Native. Converted fr
 - Stack routes: Game screens (/game/breathing, /game/memory, /game/focus)
 
 ## Recent Changes
+- Apr 2026: Rebuilt Journal with 2-tab system: Entries + Gratitude Wall (photo tiles from journal + standalone tiles)
+- Apr 2026: Created Games Hub (/games) — dedicated page with 3 games, science descriptions, best scores
+- Apr 2026: Created Mood Garden (/mood-garden) — animated living garden from mood history, 5 plant types
+- Apr 2026: Created Quick Calm (/quick-calm) — 6 voiced micro-exercises (30-90 seconds) with science backing
+- Apr 2026: Updated Explore Tools: Mood Garden, Quick Calm, Mindful Games hub (replaces individual game links)
 - Apr 2026: Added Mindful Eating Timer (10/20/30 min) with 8 guided prompts to Eating tab
 - Apr 2026: Created Challenges screen (/challenges) — Duolingo-style XP/levels (Seed→Forest), 5 daily missions, weekly quest, 6 achievement badges
 - Apr 2026: Created 7-Day Wellness Course (/course-week) — 5+ sessions/day per day (sunrise, midday, mid-afternoon, sunset, evening) with meals, exercise, environment, mindset themes. Progress checkboxes persisted.

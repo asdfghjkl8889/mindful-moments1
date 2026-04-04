@@ -10,6 +10,7 @@ const KEYS = {
   GAME_SCORES: "mindful_game_scores",
   CHALLENGES: "mindful_challenges",
   WEEK_COURSE: "mindful_week_course",
+  GRATITUDE_TILES: "mindful_gratitude_tiles",
 };
 
 export interface MoodEntry {
@@ -78,6 +79,13 @@ export interface ChallengeData {
 export interface WeekCourseProgress {
   completedSessions: string[];
   startedDate: string;
+}
+
+export interface GratitudeTile {
+  id: string;
+  photoUri: string;
+  caption: string;
+  timestamp: number;
 }
 
 function generateId(): string {
@@ -455,5 +463,29 @@ export const storage = {
 
   async saveWeekCourseProgress(data: WeekCourseProgress): Promise<void> {
     await AsyncStorage.setItem(KEYS.WEEK_COURSE, JSON.stringify(data));
+  },
+
+  async getGratitudeTiles(): Promise<GratitudeTile[]> {
+    const raw = await AsyncStorage.getItem(KEYS.GRATITUDE_TILES);
+    return raw ? JSON.parse(raw) : [];
+  },
+
+  async addGratitudeTile(photoUri: string, caption: string): Promise<GratitudeTile> {
+    const tiles = await this.getGratitudeTiles();
+    const tile: GratitudeTile = {
+      id: generateId(),
+      photoUri,
+      caption,
+      timestamp: Date.now(),
+    };
+    tiles.unshift(tile);
+    await AsyncStorage.setItem(KEYS.GRATITUDE_TILES, JSON.stringify(tiles));
+    return tile;
+  },
+
+  async deleteGratitudeTile(id: string): Promise<void> {
+    const tiles = await this.getGratitudeTiles();
+    const updated = tiles.filter((t) => t.id !== id);
+    await AsyncStorage.setItem(KEYS.GRATITUDE_TILES, JSON.stringify(updated));
   },
 };

@@ -60,6 +60,18 @@ function RootLayoutNav() {
         name="negative-thoughts"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="games"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="mood-garden"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="quick-calm"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
