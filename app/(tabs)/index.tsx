@@ -44,6 +44,122 @@ const MOODS = [
   { key: "stressed" as const, icon: "thunderstorm", label: "Stressed", color: "#EF5350" },
 ];
 
+const MOOD_PLANT_MAP: Record<string, { emoji: string; color: string; name: string }> = {
+  happy:   { emoji: "🌻", color: "#FFD54F", name: "Sunflower" },
+  good:    { emoji: "🌸", color: "#FF8A80", name: "Blossom" },
+  neutral: { emoji: "🪷", color: "#B39DDB", name: "Lotus" },
+  sad:     { emoji: "🌿", color: "#66BB6A", name: "Fern" },
+  stressed:{ emoji: "🌵", color: "#4DB6AC", name: "Cactus" },
+};
+
+const GARDEN_INSIGHTS: Record<string, string> = {
+  happy: "Your garden is blooming with joy 🌻",
+  good: "Cherry blossoms fill your garden 🌸",
+  neutral: "Lotus flowers grow in still water 🪷",
+  sad: "Ferns flourish after rain 🌿",
+  stressed: "Your cactus stands tall and resilient 🌵",
+};
+
+function MiniMoodGarden({ moods, isDark }: { moods: MoodEntry[]; isDark: boolean }) {
+  const colors = isDark ? Colors.dark : Colors.light;
+  const recent = moods.slice(-14);
+
+  const counts: Record<string, number> = {};
+  for (const m of recent) counts[m.mood] = (counts[m.mood] || 0) + 1;
+
+  type PlantItem = { emoji: string; size: number; x: number; key: string };
+  const plants: PlantItem[] = [];
+  const positions: number[] = [];
+  const gardenW = 260;
+
+  for (const [moodKey, count] of Object.entries(counts)) {
+    const info = MOOD_PLANT_MAP[moodKey];
+    if (!info) continue;
+    const num = Math.min(count, 3);
+    for (let i = 0; i < num; i++) {
+      let x: number;
+      let attempts = 0;
+      do { x = 8 + Math.floor(Math.random() * (gardenW - 40)); attempts++; }
+      while (positions.some((p) => Math.abs(p - x) < 38) && attempts < 20);
+      positions.push(x);
+      plants.push({ emoji: info.emoji, size: 22 + Math.floor(Math.random() * 12), x, key: `${moodKey}_${i}` });
+    }
+  }
+  plants.sort((a, b) => a.x - b.x);
+
+  const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const positiveCount = (counts.happy || 0) + (counts.good || 0);
+  const health = recent.length > 0 ? Math.round((positiveCount / recent.length) * 100) : 0;
+  const insight = dominant ? GARDEN_INSIGHTS[dominant] : "Log a mood to grow your garden 🌱";
+
+  const sway = useSharedValue(0);
+  useEffect(() => {
+    sway.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
+        withTiming(-1, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      false,
+    );
+  }, []);
+  const swayStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${sway.value * 3}deg` }] }));
+
+  const hour = new Date().getHours();
+  const skyColors: [string, string] =
+    hour >= 6 && hour < 9 ? ["#FFE0B2", "#81D4FA"] :
+    hour >= 9 && hour < 17 ? ["#B3E5FC", "#E8F5E9"] :
+    hour >= 17 && hour < 20 ? ["#FF8A65", "#FFB74D"] :
+    ["#283593", "#1A237E"];
+
+  return (
+    <Pressable
+      onPress={() => router.push("/mood-garden" as any)}
+      style={({ pressed }) => [
+        styles.miniGardenCard,
+        { backgroundColor: colors.card, borderColor: colors.cardBorder, opacity: pressed ? 0.93 : 1 },
+      ]}
+    >
+      <View style={styles.miniGardenHeader}>
+        <View style={styles.miniGardenTitleRow}>
+          <Text style={{ fontSize: 18 }}>🌿</Text>
+          <Text style={[styles.miniGardenTitle, { color: colors.text }]}>Mood Garden</Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {recent.length > 0 && (
+            <View style={[styles.miniHealthBadge, {
+              backgroundColor: health >= 60 ? "#66BB6A20" : health >= 30 ? "#FFD54F20" : "#FF8A8020",
+            }]}>
+              <Text style={[styles.miniHealthText, {
+                color: health >= 60 ? "#388E3C" : health >= 30 ? "#F57F17" : "#C62828",
+              }]}>{health}% healthy</Text>
+            </View>
+          )}
+          <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+        </View>
+      </View>
+
+      <LinearGradient colors={skyColors} style={styles.miniSky} />
+      <View style={styles.miniGrass}>
+        {plants.length === 0 ? (
+          <View style={styles.miniEmptyGarden}>
+            <Text style={{ fontSize: 28 }}>🌱</Text>
+            <Text style={[styles.miniEmptyText, { color: "#2E7D32" }]}>Log a mood to plant your garden</Text>
+          </View>
+        ) : (
+          plants.map((p) => (
+            <Animated.View key={p.key} style={[{ position: "absolute", bottom: 2, left: p.x }, swayStyle]}>
+              <Text style={{ fontSize: p.size }}>{p.emoji}</Text>
+            </Animated.View>
+          ))
+        )}
+      </View>
+
+      <Text style={[styles.miniInsight, { color: colors.textSecondary }]}>{insight}</Text>
+    </Pressable>
+  );
+}
+
 function MoodButton({
   mood,
   selected,
@@ -598,6 +714,13 @@ export default function HomeScreen() {
         </View>
       </Animated.View>
 
+      <Animated.View
+        entering={Platform.OS !== "web" ? FadeInDown.delay(450).duration(600) : undefined}
+        style={{ paddingHorizontal: 20, marginTop: 4 }}
+      >
+        <MiniMoodGarden moods={allMoods} isDark={isDark} />
+      </Animated.View>
+
       {recentMoods.length > 0 && (
         <Animated.View
           entering={Platform.OS !== "web" ? FadeInRight.delay(500).duration(600) : undefined}
@@ -766,4 +889,27 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", padding: 12, borderRadius: 14, borderWidth: 1, width: 64, gap: 6,
   },
   moodHistoryLabel: { fontFamily: "Nunito_500Medium", fontSize: 11 },
+  miniGardenCard: {
+    borderRadius: 20, borderWidth: 1, overflow: "hidden",
+    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2,
+  },
+  miniGardenHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10,
+  },
+  miniGardenTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  miniGardenTitle: { fontFamily: "Nunito_700Bold", fontSize: 16 },
+  miniHealthBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  miniHealthText: { fontFamily: "Nunito_700Bold", fontSize: 11 },
+  miniSky: { height: 40, width: "100%" },
+  miniGrass: {
+    height: 64, backgroundColor: "#A5D6A7", width: "100%",
+    position: "relative",
+  },
+  miniEmptyGarden: { flex: 1, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8 },
+  miniEmptyText: { fontFamily: "Nunito_500Medium", fontSize: 13 },
+  miniInsight: {
+    fontFamily: "Nunito_500Medium", fontSize: 13, textAlign: "center",
+    paddingHorizontal: 16, paddingVertical: 10,
+  },
 });
