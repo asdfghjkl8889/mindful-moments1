@@ -5,6 +5,7 @@ import {
   View,
   Pressable,
   ScrollView,
+  FlatList,
   useColorScheme,
   Platform,
   Switch,
@@ -411,8 +412,9 @@ export default function MeditateScreen() {
       {!isTimerRunning && !completed ? (
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? 34 : 100 }}
+          contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? 120 : 120 }}
           showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
         >
           <LinearGradient
             colors={["#E0F7FA", "#B2EBF2", "#E8F5E9"]}
@@ -447,14 +449,16 @@ export default function MeditateScreen() {
           </LinearGradient>
 
           <Text style={[styles.sectionLabel, { color: colors.text }]}>Guided Sessions</Text>
-          <ScrollView
+          <FlatList
             horizontal
+            data={GUIDED_MEDITATIONS}
+            keyExtractor={(m) => m.id}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.guidedRow}
-          >
-            {GUIDED_MEDITATIONS.map((m) => (
+            nestedScrollEnabled
+            scrollEnabled
+            renderItem={({ item: m }) => (
               <GuidedCard
-                key={m.id}
                 meditation={m}
                 selected={selectedGuided.id === m.id}
                 onPress={() => {
@@ -462,8 +466,8 @@ export default function MeditateScreen() {
                   if (Platform.OS !== "web") Haptics.selectionAsync();
                 }}
               />
-            ))}
-          </ScrollView>
+            )}
+          />
 
           <View style={[styles.selectedGuided, { backgroundColor: selectedGuided.color + "12", borderColor: colors.cardBorder }]}>
             <Ionicons name={selectedGuided.icon as any} size={24} color={selectedGuided.color} />
@@ -474,7 +478,12 @@ export default function MeditateScreen() {
           </View>
 
           <Text style={[styles.sectionLabel, { color: colors.text }]}>Duration</Text>
-          <View style={styles.durationRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            nestedScrollEnabled
+            contentContainerStyle={styles.durationRow}
+          >
             {DURATIONS.map((d) => (
               <Pressable
                 key={d.minutes}
@@ -498,7 +507,7 @@ export default function MeditateScreen() {
                 </Text>
               </Pressable>
             ))}
-          </View>
+          </ScrollView>
 
           <View style={styles.controls}>
             <Pressable
@@ -662,8 +671,8 @@ const styles = StyleSheet.create({
   selectedGuidedTitle: { fontFamily: "Nunito_700Bold", fontSize: 15 },
   selectedGuidedDesc: { fontFamily: "Nunito_400Regular", fontSize: 12 },
   durationRow: {
-    flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8,
-    paddingHorizontal: 20, marginBottom: 20,
+    flexDirection: "row", gap: 8,
+    paddingHorizontal: 20, paddingBottom: 20,
   },
   durationBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1 },
   durationText: { fontFamily: "Nunito_600SemiBold", fontSize: 14 },
@@ -674,6 +683,7 @@ const styles = StyleSheet.create({
   completedWrap: { alignItems: "center", gap: 6 },
   completedText: { fontFamily: "Nunito_700Bold", fontSize: 20, marginTop: 8, color: "#fff" },
   completedSub: { fontFamily: "Nunito_500Medium", fontSize: 14, color: "rgba(255,255,255,0.75)" },
+  controls: { paddingHorizontal: 20, paddingBottom: 8, width: "100%" },
   mainBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 16, borderRadius: 16,
   },
