@@ -85,11 +85,11 @@ const PERSPECTIVE_QUESTIONS = [
 
 const LOOP_BREAKERS = [
   "Write it down, then close the notebook.",
-  "Set a 10-minute "worry window" — then let it go.",
+  'Set a 10-minute "worry window" — then let it go.',
   "Ask: Am I solving a problem or just replaying one?",
   "Is there anything I can do about this right now?",
   "What would my calmest self say about this?",
-  "Name the feeling, not the story: "I feel anxious." Full stop.",
+  'Name the feeling, not the story: "I feel anxious." Full stop.',
 ];
 
 function generateId() {
