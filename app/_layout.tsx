@@ -101,6 +101,10 @@ function RootLayoutNav() {
           name="overthinking"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="anger-management"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </AuthGate>
   );

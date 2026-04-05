@@ -393,6 +393,7 @@ export default function ExploreScreen() {
               { title: "Challenges", desc: "Daily missions, XP & badges", icon: "trophy", color: "#FFD54F", bg: "#FFF8E1", route: "/challenges" },
               { title: "7-Day Course", desc: "Full wellness week program", icon: "calendar", color: "#4DB6AC", bg: "#E0F7FA", route: "/course-week" },
               { title: "Overthinking", desc: "Break thought loops & find calm", icon: "sync-circle", color: "#FF7043", bg: "#FBE9E7", route: "/overthinking" },
+              { title: "Anger Management", desc: "Cool down, log & understand anger", icon: "flame", color: "#EF5350", bg: "#FFEBEE", route: "/anger-management" },
               { title: "Reframe Thoughts", desc: "CBT thought challenging tool", icon: "bulb", color: "#FF8A80", bg: "#FCE4EC", route: "/negative-thoughts" },
               { title: "Mood Garden", desc: "Your emotions as a living garden", icon: "flower", color: "#66BB6A", bg: "#E8F5E9", route: "/mood-garden" },
               { title: "Quick Calm", desc: "60-second mindfulness resets", icon: "flash", color: "#B39DDB", bg: "#F3E5F5", route: "/quick-calm" },
