@@ -35,6 +35,7 @@ A mindfulness and wellness mobile app built with Expo React Native. Converted fr
 - Stack routes: Game screens (/game/breathing, /game/memory, /game/focus)
 
 ## Recent Changes
+- Apr 2026: Major redesign — immersive home hero (time-of-day gradient), Quick Actions row, "For You Today" mood-aware recommendations, full-screen orbital-ring meditation experience, colorful gradient guided session cards
 - Apr 2026: Rebuilt Journal with 2-tab system: Entries + Gratitude Wall (photo tiles from journal + standalone tiles)
 - Apr 2026: Created Games Hub (/games) — dedicated page with 3 games, science descriptions, best scores
 - Apr 2026: Created Mood Garden (/mood-garden) — animated living garden from mood history, 5 plant types

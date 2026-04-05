@@ -220,155 +220,135 @@ function StatCard({
   );
 }
 
-function PanicButton() {
-  const pulse1 = useSharedValue(1);
-  const pulse2 = useSharedValue(1);
-  const pulse1Opacity = useSharedValue(0.5);
-  const pulse2Opacity = useSharedValue(0.35);
+const QUICK_ACTIONS = [
+  { icon: "musical-notes", label: "Meditate", color: "#26A69A", bg: "#E0F7FA", route: "/(tabs)/meditate" },
+  { icon: "book", label: "Journal", color: "#FF8A65", bg: "#FFF3E0", route: "/(tabs)/journal" },
+  { icon: "flash", label: "Quick Calm", color: "#9C27B0", bg: "#F3E5F5", route: "/quick-calm" },
+  { icon: "leaf", label: "Breathe", color: "#EF5350", bg: "#FFEBEE", route: "/game/breathing" },
+] as const;
 
-  useEffect(() => {
-    pulse1.value = withRepeat(
-      withSequence(
-        withTiming(1.55, { duration: 1200, easing: Easing.out(Easing.ease) }),
-        withTiming(1, { duration: 0 }),
-      ),
-      -1,
-      false,
-    );
-    pulse1Opacity.value = withRepeat(
-      withSequence(
-        withTiming(0, { duration: 1200, easing: Easing.out(Easing.ease) }),
-        withTiming(0.5, { duration: 0 }),
-      ),
-      -1,
-      false,
-    );
-    pulse2.value = withDelay(
-      450,
-      withRepeat(
-        withSequence(
-          withTiming(1.55, { duration: 1200, easing: Easing.out(Easing.ease) }),
-          withTiming(1, { duration: 0 }),
-        ),
-        -1,
-        false,
-      ),
-    );
-    pulse2Opacity.value = withDelay(
-      450,
-      withRepeat(
-        withSequence(
-          withTiming(0, { duration: 1200, easing: Easing.out(Easing.ease) }),
-          withTiming(0.35, { duration: 0 }),
-        ),
-        -1,
-        false,
-      ),
-    );
-  }, []);
-
-  const ring1Style = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse1.value }],
-    opacity: pulse1Opacity.value,
-  }));
-  const ring2Style = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse2.value }],
-    opacity: pulse2Opacity.value,
-  }));
-
-  const handlePress = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }
-    router.push("/game/breathing");
-  };
-
+function QuickActions() {
   return (
-    <View style={panicStyles.wrapper}>
-      <Text style={panicStyles.label}>Feeling anxious right now?</Text>
-      <View style={panicStyles.circleWrap}>
-        <Animated.View style={[panicStyles.ring, ring1Style]} />
-        <Animated.View style={[panicStyles.ring, ring2Style]} />
+    <View style={qaStyles.row}>
+      {QUICK_ACTIONS.map((action) => (
         <Pressable
-          onPress={handlePress}
-          style={({ pressed }) => [
-            panicStyles.btn,
-            { transform: [{ scale: pressed ? 0.93 : 1 }] },
-          ]}
+          key={action.label}
+          onPress={() => router.push(action.route as any)}
+          style={({ pressed }) => [qaStyles.pill, { backgroundColor: action.bg, opacity: pressed ? 0.82 : 1 }]}
         >
-          <Ionicons name="leaf" size={30} color="#fff" />
-          <Text style={panicStyles.btnLine1}>Breathe</Text>
-          <Text style={panicStyles.btnLine2}>Now</Text>
+          <View style={[qaStyles.iconCircle, { backgroundColor: action.color + "22" }]}>
+            <Ionicons name={action.icon as any} size={22} color={action.color} />
+          </View>
+          <Text style={[qaStyles.pillLabel, { color: action.color }]}>{action.label}</Text>
         </Pressable>
-      </View>
-      <Text style={panicStyles.sub}>Tap for an instant calming exercise</Text>
+      ))}
     </View>
   );
 }
 
-const panicStyles = StyleSheet.create({
-  wrapper: {
-    alignItems: "center",
-    marginHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 4,
-    paddingVertical: 20,
-    backgroundColor: "#FFF5F5",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#FFCDD2",
+const qaStyles = StyleSheet.create({
+  row: { flexDirection: "row", paddingHorizontal: 20, gap: 10, marginTop: 16, marginBottom: 4 },
+  pill: {
+    flex: 1, alignItems: "center", paddingVertical: 14, borderRadius: 20, gap: 8,
+    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
-  label: {
-    fontFamily: "Nunito_700Bold",
-    fontSize: 15,
-    color: "#C62828",
-    marginBottom: 18,
+  iconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  pillLabel: { fontFamily: "Nunito_700Bold", fontSize: 11 },
+});
+
+const FOR_YOU: Record<string, { title: string; sub: string; icon: string; color: string; route: string }[]> = {
+  happy: [
+    { title: "Mood Garden", sub: "Your garden is blooming", icon: "leaf", color: "#66BB6A", route: "/mood-garden" },
+    { title: "Focus Session", sub: "Ride this energy", icon: "radio-button-on", color: "#26A69A", route: "/(tabs)/meditate" },
+    { title: "Gratitude Wall", sub: "Capture the moment", icon: "images", color: "#FF8A65", route: "/(tabs)/journal" },
+  ],
+  good: [
+    { title: "Body Scan", sub: "Deepen your awareness", icon: "body", color: "#B39DDB", route: "/(tabs)/meditate" },
+    { title: "Daily Inspiration", sub: "Explore 100+ quotes", icon: "sparkles", color: "#26A69A", route: "/inspiration" },
+    { title: "Challenges", sub: "Level up your practice", icon: "trophy", color: "#FFD54F", route: "/challenges" },
+  ],
+  neutral: [
+    { title: "Calm Mind", sub: "Find your center", icon: "water", color: "#81D4FA", route: "/(tabs)/meditate" },
+    { title: "Quick Calm", sub: "Under 90 seconds", icon: "flash", color: "#9C27B0", route: "/quick-calm" },
+    { title: "Gratitude Wall", sub: "Shift your perspective", icon: "images", color: "#FF8A65", route: "/(tabs)/journal" },
+  ],
+  sad: [
+    { title: "Self-Compassion", sub: "Be kind to yourself", icon: "heart", color: "#EF5350", route: "/quick-calm" },
+    { title: "Body Scan", sub: "Ground in your body", icon: "body", color: "#B39DDB", route: "/(tabs)/meditate" },
+    { title: "Reframe Thoughts", sub: "CBT thought record", icon: "bulb", color: "#FF8A65", route: "/negative-thoughts" },
+  ],
+  stressed: [
+    { title: "Breathe Now", sub: "Instant calm in 60s", icon: "leaf", color: "#EF5350", route: "/game/breathing" },
+    { title: "Quick Calm", sub: "Box breath + grounding", icon: "flash", color: "#9C27B0", route: "/quick-calm" },
+    { title: "Crisis Support", sub: "You are not alone", icon: "shield-checkmark", color: "#FF8A65", route: "/emergency" },
+  ],
+  default: [
+    { title: "Calm Mind", sub: "Start your practice", icon: "water", color: "#81D4FA", route: "/(tabs)/meditate" },
+    { title: "Daily Inspiration", sub: "100+ mindful quotes", icon: "sparkles", color: "#26A69A", route: "/inspiration" },
+    { title: "Quick Calm", sub: "Under 90 seconds", icon: "flash", color: "#9C27B0", route: "/quick-calm" },
+  ],
+};
+
+function ForYouSection({ mood, isDark }: { mood: string | null; isDark: boolean }) {
+  const colors = isDark ? Colors.dark : Colors.light;
+  const recs = FOR_YOU[mood ?? "default"] ?? FOR_YOU.default;
+
+  return (
+    <View style={{ marginTop: 28 }}>
+      <View style={fyStyles.header}>
+        <Text style={[fyStyles.title, { color: colors.text }]}>For You Today</Text>
+        <View style={[fyStyles.badge, { backgroundColor: colors.tint + "18" }]}>
+          <Text style={[fyStyles.badgeText, { color: colors.tint }]}>Personalized</Text>
+        </View>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={fyStyles.cardRow}
+      >
+        {recs.map((rec) => (
+          <Pressable
+            key={rec.title}
+            onPress={() => router.push(rec.route as any)}
+            style={({ pressed }) => [
+              fyStyles.card,
+              { backgroundColor: rec.color + "12", borderColor: rec.color + "30", opacity: pressed ? 0.88 : 1 },
+            ]}
+          >
+            <View style={[fyStyles.cardIcon, { backgroundColor: rec.color + "20" }]}>
+              <Ionicons name={rec.icon as any} size={20} color={rec.color} />
+            </View>
+            <Text style={[fyStyles.cardTitle, { color: colors.text }]}>{rec.title}</Text>
+            <Text style={[fyStyles.cardSub, { color: colors.textSecondary }]}>{rec.sub}</Text>
+            <View style={[fyStyles.cardChip, { backgroundColor: rec.color }]}>
+              <Text style={fyStyles.cardChipText}>Open</Text>
+              <Ionicons name="arrow-forward" size={10} color="#fff" />
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+const fyStyles = StyleSheet.create({
+  header: { flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 20, marginBottom: 14 },
+  title: { fontFamily: "Nunito_800ExtraBold", fontSize: 18 },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  badgeText: { fontFamily: "Nunito_600SemiBold", fontSize: 11 },
+  cardRow: { paddingHorizontal: 20, gap: 12 },
+  card: {
+    width: 150, borderRadius: 20, padding: 16, borderWidth: 1, gap: 8,
+    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
-  circleWrap: {
-    width: 120,
-    height: 120,
-    alignItems: "center",
-    justifyContent: "center",
+  cardIcon: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  cardTitle: { fontFamily: "Nunito_700Bold", fontSize: 14 },
+  cardSub: { fontFamily: "Nunito_400Regular", fontSize: 12, lineHeight: 16 },
+  cardChip: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12,
   },
-  ring: {
-    position: "absolute",
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#EF5350",
-  },
-  btn: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#EF5350",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#EF5350",
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-    gap: 2,
-  },
-  btnLine1: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 15,
-    color: "#fff",
-    lineHeight: 17,
-  },
-  btnLine2: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 15,
-    color: "#fff",
-    lineHeight: 17,
-  },
-  sub: {
-    fontFamily: "Nunito_400Regular",
-    fontSize: 12,
-    color: "#E57373",
-    marginTop: 14,
-  },
+  cardChipText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#fff" },
 });
 
 function LarryTurtle({ message, isDark }: { message: string; isDark: boolean }) {
@@ -590,12 +570,21 @@ export default function HomeScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const recentMoods = allMoods.slice(0, 7);
 
+  const heroGradient = useMemo((): [string, string, string] => {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 9)  return ["#FFB74D", "#FFA726", "#E0F7FA"];
+    if (h >= 9 && h < 12) return ["#81D4FA", "#4FC3F7", "#E8F5E9"];
+    if (h >= 12 && h < 17) return ["#4DB6AC", "#26A69A", "#B2EBF2"];
+    if (h >= 17 && h < 20) return ["#FF8A65", "#FF7043", "#FFB74D"];
+    return ["#7986CB", "#5C6BC0", "#B39DDB"];
+  }, []);
+
   return (
     <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
     <ScrollView
       style={styles.container}
       contentContainerStyle={{
-        paddingTop: insets.top + webTopInset + 16,
+        paddingTop: 0,
         paddingBottom: 120,
       }}
       showsVerticalScrollIndicator={false}
@@ -603,36 +592,41 @@ export default function HomeScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(600) : undefined}>
+      {/* ─── Immersive Hero ─── */}
+      <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(700) : undefined}>
         <LinearGradient
-          colors={["#E0F7FA", "#C8E6C9", "#FFFFFF"]}
-          style={styles.headerGradient}
+          colors={heroGradient}
+          style={[styles.hero, { paddingTop: insets.top + webTopInset + 20 }]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <View style={styles.headerRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-                {getGreeting()}{profile.name ? `, ${profile.name}` : ""}
-              </Text>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>
-                How are you feeling?
+          <View style={styles.heroTopRow}>
+            <View style={[styles.streakBadge, { backgroundColor: "rgba(255,255,255,0.35)" }]}>
+              <Ionicons name="flame" size={14} color="#FF6B6B" />
+              <Text style={styles.streakBadgeText}>
+                {streak.currentStreak} day streak
               </Text>
             </View>
             <Pressable
               onPress={() => router.push("/profile")}
               style={({ pressed }) => [
                 styles.profileBtn,
-                { backgroundColor: colors.tint + "20", opacity: pressed ? 0.8 : 1 },
+                { backgroundColor: "rgba(255,255,255,0.35)", opacity: pressed ? 0.8 : 1 },
               ]}
             >
-              <Ionicons name="person" size={20} color={colors.tint} />
+              <Ionicons name="person" size={20} color="#fff" />
             </Pressable>
           </View>
+          <Text style={styles.heroGreeting}>
+            {getGreeting()}{profile.name ? `, ${profile.name}` : ""}
+          </Text>
+          <Text style={styles.heroTitle}>Your mindful space</Text>
+          <Text style={styles.heroSub}>How are you feeling today?</Text>
         </LinearGradient>
       </Animated.View>
 
-      <View style={styles.moodRow}>
+      {/* ─── Mood Row ─── */}
+      <View style={[styles.moodRow, { marginTop: -8 }]}>
         {MOODS.map((mood) => (
           <MoodButton
             key={mood.key}
@@ -652,15 +646,19 @@ export default function HomeScreen() {
         </View>
       )}
 
-      <Animated.View
-        entering={Platform.OS !== "web" ? FadeInDown.delay(120).duration(600) : undefined}
-      >
-        <PanicButton />
+      {/* ─── Quick Actions ─── */}
+      <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(100).duration(600) : undefined}>
+        <QuickActions />
+      </Animated.View>
+
+      {/* ─── For You Today ─── */}
+      <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(160).duration(600) : undefined}>
+        <ForYouSection mood={selectedMood} isDark={isDark} />
       </Animated.View>
 
       <Animated.View
-        entering={Platform.OS !== "web" ? FadeInDown.delay(150).duration(600) : undefined}
-        style={{ marginHorizontal: 20, marginTop: 12 }}
+        entering={Platform.OS !== "web" ? FadeInDown.delay(200).duration(600) : undefined}
+        style={{ marginHorizontal: 20, marginTop: 20 }}
       >
         <LarryTurtle message={larryMsg} isDark={isDark} />
       </Animated.View>
@@ -795,17 +793,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#fff",
   },
-  headerGradient: {
-    marginHorizontal: 20, borderRadius: 20, padding: 24, marginBottom: 20,
+  hero: {
+    paddingHorizontal: 24, paddingBottom: 32,
+    borderBottomLeftRadius: 32, borderBottomRightRadius: 32,
+    shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8,
   },
-  headerRow: {
-    flexDirection: "row", alignItems: "center", gap: 12,
+  heroTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 28 },
+  streakBadge: {
+    flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
   },
+  streakBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#fff" },
   profileBtn: {
     width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
   },
-  greeting: { fontFamily: "Nunito_500Medium", fontSize: 15, marginBottom: 4 },
-  headerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 26 },
+  heroGreeting: { fontFamily: "Nunito_500Medium", fontSize: 16, color: "rgba(255,255,255,0.85)", marginBottom: 6 },
+  heroTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 30, color: "#fff", marginBottom: 8 },
+  heroSub: { fontFamily: "Nunito_500Medium", fontSize: 14, color: "rgba(255,255,255,0.75)" },
   moodRow: {
     flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, marginBottom: 8,
   },

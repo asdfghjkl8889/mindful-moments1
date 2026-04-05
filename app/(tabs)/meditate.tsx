@@ -164,32 +164,36 @@ function GuidedCard({
   meditation,
   selected,
   onPress,
-  colors,
 }: {
   meditation: (typeof GUIDED_MEDITATIONS)[0];
   selected: boolean;
   onPress: () => void;
-  colors: any;
 }) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.guidedCard,
-        {
-          backgroundColor: selected ? meditation.color + "20" : colors.card,
-          borderColor: selected ? meditation.color : colors.cardBorder,
-          opacity: pressed ? 0.85 : 1,
-        },
+        { opacity: pressed ? 0.88 : 1 },
       ]}
     >
-      <View style={[styles.guidedIconWrap, { backgroundColor: meditation.color + "20" }]}>
-        <Ionicons name={meditation.icon as any} size={22} color={meditation.color} />
-      </View>
-      <Text style={[styles.guidedTitle, { color: colors.text }]} numberOfLines={1}>{meditation.title}</Text>
-      <Text style={[styles.guidedDesc, { color: colors.textSecondary }]} numberOfLines={2}>
-        {meditation.description}
-      </Text>
+      <LinearGradient
+        colors={[meditation.color + "FF", meditation.color + "CC"]}
+        style={styles.guidedCardInner}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        {selected && (
+          <View style={styles.guidedSelectedBadge}>
+            <Ionicons name="checkmark-circle" size={14} color="#fff" />
+          </View>
+        )}
+        <View style={styles.guidedIconWrap}>
+          <Ionicons name={meditation.icon as any} size={24} color="#fff" />
+        </View>
+        <Text style={styles.guidedTitle} numberOfLines={1}>{meditation.title}</Text>
+        <Text style={styles.guidedDesc} numberOfLines={2}>{meditation.description}</Text>
+      </LinearGradient>
     </Pressable>
   );
 }
@@ -212,34 +216,79 @@ export default function MeditateScreen() {
 
   const breathScale = useSharedValue(1);
   const breathOpacity = useSharedValue(0.3);
+  const ring2Scale = useSharedValue(1);
+  const ring2Opacity = useSharedValue(0.2);
+  const ring3Scale = useSharedValue(1);
+  const ring3Opacity = useSharedValue(0.12);
+  const [breathPhase, setBreathPhase] = useState<"in" | "out">("in");
+  const phaseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isActive) {
       breathScale.value = withRepeat(
         withSequence(
-          withTiming(1.3, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.35, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
           withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-        ),
-        -1,
-        false,
+        ), -1, false,
       );
       breathOpacity.value = withRepeat(
         withSequence(
-          withTiming(0.6, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.2, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-        ),
-        -1,
-        false,
+          withTiming(0.55, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.18, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+        ), -1, false,
       );
+      ring2Scale.value = withRepeat(
+        withSequence(
+          withTiming(1.55, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
+        ), -1, false,
+      );
+      ring2Opacity.value = withRepeat(
+        withSequence(
+          withTiming(0.35, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.05, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
+        ), -1, false,
+      );
+      ring3Scale.value = withRepeat(
+        withSequence(
+          withTiming(1.8, { duration: 9000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 9000, easing: Easing.inOut(Easing.ease) }),
+        ), -1, false,
+      );
+      ring3Opacity.value = withRepeat(
+        withSequence(
+          withTiming(0.2, { duration: 9000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 9000, easing: Easing.inOut(Easing.ease) }),
+        ), -1, false,
+      );
+      phaseTimerRef.current = setInterval(() => {
+        setBreathPhase((p) => (p === "in" ? "out" : "in"));
+      }, 4000);
     } else {
-      breathScale.value = withTiming(1, { duration: 500 });
-      breathOpacity.value = withTiming(0.3, { duration: 500 });
+      breathScale.value = withTiming(1, { duration: 600 });
+      breathOpacity.value = withTiming(0.2, { duration: 600 });
+      ring2Scale.value = withTiming(1, { duration: 600 });
+      ring2Opacity.value = withTiming(0, { duration: 600 });
+      ring3Scale.value = withTiming(1, { duration: 600 });
+      ring3Opacity.value = withTiming(0, { duration: 600 });
+      if (phaseTimerRef.current) clearInterval(phaseTimerRef.current);
     }
+    return () => {
+      if (phaseTimerRef.current) clearInterval(phaseTimerRef.current);
+    };
   }, [isActive]);
 
   const breathStyle = useAnimatedStyle(() => ({
     transform: [{ scale: breathScale.value }],
     opacity: breathOpacity.value,
+  }));
+  const ring2Style = useAnimatedStyle(() => ({
+    transform: [{ scale: ring2Scale.value }],
+    opacity: ring2Opacity.value,
+  }));
+  const ring3Style = useAnimatedStyle(() => ({
+    transform: [{ scale: ring3Scale.value }],
+    opacity: ring3Opacity.value,
   }));
 
   useEffect(() => {
@@ -344,15 +393,20 @@ export default function MeditateScreen() {
     <View
       style={[
         styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + webTopInset },
+        {
+          backgroundColor: isTimerRunning || completed ? "#0D0D1A" : colors.background,
+          paddingTop: isTimerRunning || completed ? 0 : insets.top + webTopInset,
+        },
       ]}
     >
-      <LinearGradient
-        colors={["#FFFFFF", "#E0F7FA", "#E8F5E9"]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-      />
+      {!isTimerRunning && !completed && (
+        <LinearGradient
+          colors={["#FFFFFF", "#E0F7FA", "#E8F5E9"]}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+      )}
 
       {!isTimerRunning && !completed ? (
         <ScrollView
@@ -360,27 +414,37 @@ export default function MeditateScreen() {
           contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? 34 : 100 }}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Meditate</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Choose your practice
-            </Text>
-          </View>
-
-          <View style={styles.voiceRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.voiceLabel, { color: colors.text }]}>Voice Guidance</Text>
-              <Text style={[styles.voiceSub, { color: colors.textSecondary }]}>
-                Spoken cues during meditation
-              </Text>
+          <LinearGradient
+            colors={["#E0F7FA", "#B2EBF2", "#E8F5E9"]}
+            style={styles.meditateHero}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.meditateHeroInner}>
+              <View style={styles.meditateHeroDot}>
+                <Ionicons name="musical-notes" size={28} color="#26A69A" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.title, { color: colors.text }]}>Meditate</Text>
+                <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                  Choose your practice
+                </Text>
+              </View>
             </View>
-            <Switch
-              value={voiceEnabled}
-              onValueChange={setVoiceEnabled}
-              trackColor={{ false: colors.cardBorder, true: colors.tint + "60" }}
-              thumbColor={voiceEnabled ? colors.tint : "#ccc"}
-            />
-          </View>
+            <View style={[styles.voiceRow, { backgroundColor: "rgba(255,255,255,0.6)", marginTop: 12 }]}>
+              <Ionicons name="mic" size={18} color={colors.tint} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.voiceLabel, { color: colors.text }]}>Voice Guidance</Text>
+                <Text style={[styles.voiceSub, { color: colors.textSecondary }]}>Spoken cues during session</Text>
+              </View>
+              <Switch
+                value={voiceEnabled}
+                onValueChange={setVoiceEnabled}
+                trackColor={{ false: colors.cardBorder, true: colors.tint + "60" }}
+                thumbColor={voiceEnabled ? colors.tint : "#ccc"}
+              />
+            </View>
+          </LinearGradient>
 
           <Text style={[styles.sectionLabel, { color: colors.text }]}>Guided Sessions</Text>
           <ScrollView
@@ -397,7 +461,6 @@ export default function MeditateScreen() {
                   setSelectedGuided(m);
                   if (Platform.OS !== "web") Haptics.selectionAsync();
                 }}
-                colors={colors}
               />
             ))}
           </ScrollView>
@@ -451,119 +514,104 @@ export default function MeditateScreen() {
           </View>
         </ScrollView>
       ) : (
-        <>
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {completed ? "Complete" : selectedGuided.title}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {isActive ? "Breathe in... Breathe out..." : completed ? "Well done! Namaste." : "Paused"}
-            </Text>
+        <View style={styles.immersiveWrap}>
+          <LinearGradient
+            colors={[selectedGuided.color + "FF", selectedGuided.color + "88", "#0D0D1A"]}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          />
+
+          {/* Top bar */}
+          <View style={[styles.immersiveTopBar, { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0) + 16 }]}>
+            <Pressable
+              onPress={resetMeditation}
+              style={({ pressed }) => [styles.immersiveBackBtn, { opacity: pressed ? 0.7 : 1 }]}
+            >
+              <Ionicons name="close" size={22} color="rgba(255,255,255,0.85)" />
+            </Pressable>
+            <View style={{ alignItems: "center" }}>
+              <Text style={styles.immersiveSessionName}>{selectedGuided.title}</Text>
+              {!completed && (
+                <Text style={styles.immersiveSubtitle}>
+                  {isActive ? (breathPhase === "in" ? "Breathe in..." : "Breathe out...") : "Paused"}
+                </Text>
+              )}
+            </View>
+            <View style={{ width: 40 }} />
           </View>
 
-          <View style={styles.timerArea}>
-            <Animated.View
-              style={[styles.breathCircleOuter, breathStyle, { borderColor: selectedGuided.color }]}
-            />
-            <View
-              style={[
-                styles.timerCircle,
-                {
-                  backgroundColor: isDark ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.8)",
-                  borderColor: selectedGuided.color + "40",
-                },
-              ]}
-            >
+          {/* Orbital rings + timer */}
+          <View style={styles.immersiveCenter}>
+            {!completed && (
+              <>
+                <Animated.View style={[styles.orbRing3, { borderColor: selectedGuided.color + "40" }, ring3Style]} />
+                <Animated.View style={[styles.orbRing2, { borderColor: selectedGuided.color + "70" }, ring2Style]} />
+                <Animated.View style={[styles.orbRing1, { borderColor: selectedGuided.color + "CC" }, breathStyle]} />
+              </>
+            )}
+            <View style={[styles.timerCircle, { backgroundColor: "rgba(255,255,255,0.12)", borderColor: "rgba(255,255,255,0.25)" }]}>
               {completed ? (
                 <Animated.View
-                  entering={Platform.OS !== "web" ? FadeIn.duration(500) : undefined}
+                  entering={Platform.OS !== "web" ? FadeIn.duration(600) : undefined}
                   style={styles.completedWrap}
                 >
-                  <Ionicons name="checkmark-circle" size={48} color={colors.sage} />
-                  <Text style={[styles.completedText, { color: colors.text }]}>Complete</Text>
-                  <Text style={[styles.completedSub, { color: colors.textSecondary }]}>
-                    {selectedDuration} minutes
-                  </Text>
+                  <Ionicons name="checkmark-circle" size={52} color="#fff" />
+                  <Text style={styles.completedText}>Complete</Text>
+                  <Text style={styles.completedSub}>{selectedDuration} minutes</Text>
                 </Animated.View>
               ) : (
                 <>
-                  <Text style={[styles.timerText, { color: colors.text }]}>
-                    {formatTime(timeLeft)}
-                  </Text>
-                  {isTimerRunning && (
-                    <View style={styles.progressBarBg}>
-                      <View
-                        style={[
-                          styles.progressBarFill,
-                          { width: `${progress * 100}%`, backgroundColor: selectedGuided.color },
-                        ]}
-                      />
-                    </View>
-                  )}
+                  <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+                  <View style={styles.progressBarBg}>
+                    <View style={[styles.progressBarFill, { width: `${progress * 100}%`, backgroundColor: "#fff" }]} />
+                  </View>
                 </>
               )}
             </View>
           </View>
 
+          {/* Voice cue */}
           {!!currentCueText && voiceEnabled && (
-            <View style={[styles.cueCard, { backgroundColor: isDark ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.9)" }]}>
-              <Ionicons name="mic" size={16} color={selectedGuided.color} />
-              <Text style={[styles.cueText, { color: colors.text }]} numberOfLines={3}>
-                {currentCueText}
-              </Text>
-            </View>
+            <Animated.View
+              entering={Platform.OS !== "web" ? FadeIn.duration(400) : undefined}
+              style={styles.immersiveCueCard}
+            >
+              <Ionicons name="mic" size={14} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.immersiveCueText} numberOfLines={3}>{currentCueText}</Text>
+            </Animated.View>
           )}
 
-          <View style={styles.controls}>
+          {/* Controls */}
+          <View style={[styles.immersiveControls, { paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 20 }]}>
             {completed ? (
               <Pressable
                 onPress={resetMeditation}
-                style={({ pressed }) => [
-                  styles.mainBtn,
-                  { backgroundColor: colors.tint, opacity: pressed ? 0.85 : 1 },
-                ]}
+                style={({ pressed }) => [styles.immersiveBtn, { opacity: pressed ? 0.85 : 1 }]}
               >
-                <Ionicons name="refresh" size={24} color="#fff" />
-                <Text style={styles.mainBtnText}>New Session</Text>
+                <Ionicons name="refresh" size={20} color={selectedGuided.color} />
+                <Text style={[styles.immersiveBtnText, { color: selectedGuided.color }]}>New Session</Text>
               </Pressable>
             ) : isActive ? (
               <Pressable
                 onPress={pauseMeditation}
-                style={({ pressed }) => [
-                  styles.mainBtn,
-                  { backgroundColor: colors.amber, opacity: pressed ? 0.85 : 1 },
-                ]}
+                style={({ pressed }) => [styles.immersivePauseBtn, { opacity: pressed ? 0.85 : 1 }]}
               >
-                <Ionicons name="pause" size={24} color="#fff" />
-                <Text style={styles.mainBtnText}>Pause</Text>
+                <Ionicons name="pause" size={26} color="#fff" />
               </Pressable>
             ) : (
-              <View style={styles.controlRow}>
-                <Pressable
-                  onPress={resetMeditation}
-                  style={({ pressed }) => [
-                    styles.secondaryBtn,
-                    { borderColor: colors.cardBorder, opacity: pressed ? 0.85 : 1 },
-                  ]}
-                >
-                  <Ionicons name="close" size={22} color={colors.text} />
-                </Pressable>
+              <View style={styles.immersivePausedRow}>
                 <Pressable
                   onPress={resumeMeditation}
-                  style={({ pressed }) => [
-                    styles.mainBtn,
-                    { backgroundColor: colors.tint, opacity: pressed ? 0.85 : 1, flex: 1 },
-                  ]}
+                  style={({ pressed }) => [styles.immersiveBtn, { opacity: pressed ? 0.85 : 1 }]}
                 >
-                  <Ionicons name="play" size={24} color="#fff" />
-                  <Text style={styles.mainBtnText}>Resume</Text>
+                  <Ionicons name="play" size={20} color={selectedGuided.color} />
+                  <Text style={[styles.immersiveBtnText, { color: selectedGuided.color }]}>Resume</Text>
                 </Pressable>
               </View>
             )}
           </View>
-
-          <View style={{ height: Platform.OS === "web" ? 34 : 0 }} />
-        </>
+        </View>
       )}
     </View>
   );
@@ -574,9 +622,18 @@ const styles = StyleSheet.create({
   header: { alignItems: "center", paddingTop: 16, paddingBottom: 8 },
   title: { fontFamily: "Nunito_800ExtraBold", fontSize: 28, marginBottom: 4 },
   subtitle: { fontFamily: "Nunito_500Medium", fontSize: 15 },
+  meditateHero: {
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
+    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4,
+  },
+  meditateHeroInner: { flexDirection: "row", alignItems: "center", gap: 14 },
+  meditateHeroDot: {
+    width: 54, height: 54, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.7)",
+    alignItems: "center", justifyContent: "center",
+  },
   voiceRow: {
-    flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginTop: 20,
-    paddingHorizontal: 16, paddingVertical: 14, borderRadius: 14, gap: 12,
+    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, gap: 12,
   },
   voiceLabel: { fontFamily: "Nunito_700Bold", fontSize: 15 },
   voiceSub: { fontFamily: "Nunito_400Regular", fontSize: 12, marginTop: 2 },
@@ -584,14 +641,20 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_700Bold", fontSize: 16, marginHorizontal: 20, marginTop: 20, marginBottom: 12,
   },
   guidedRow: { paddingHorizontal: 20, gap: 12 },
-  guidedCard: {
-    width: 130, borderRadius: 16, padding: 14, borderWidth: 1.5, gap: 8,
+  guidedCard: { width: 140, borderRadius: 20, overflow: "hidden",
+    shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 4,
+  },
+  guidedCardInner: { padding: 16, minHeight: 150, gap: 8 },
+  guidedSelectedBadge: {
+    position: "absolute", top: 10, right: 10,
+    backgroundColor: "rgba(255,255,255,0.25)", borderRadius: 10, padding: 2,
   },
   guidedIconWrap: {
-    width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center",
+    width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.25)",
   },
-  guidedTitle: { fontFamily: "Nunito_700Bold", fontSize: 14 },
-  guidedDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, lineHeight: 15 },
+  guidedTitle: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#fff", marginTop: 4 },
+  guidedDesc: { fontFamily: "Nunito_400Regular", fontSize: 12, lineHeight: 16, color: "rgba(255,255,255,0.85)" },
   selectedGuided: {
     flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 20, marginTop: 12,
     padding: 14, borderRadius: 14, borderWidth: 1,
@@ -602,37 +665,57 @@ const styles = StyleSheet.create({
     flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8,
     paddingHorizontal: 20, marginBottom: 20,
   },
-  durationBtn: {
-    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1,
-  },
+  durationBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1 },
   durationText: { fontFamily: "Nunito_600SemiBold", fontSize: 14 },
-  timerArea: { flex: 1, justifyContent: "center", alignItems: "center" },
-  breathCircleOuter: {
-    position: "absolute", width: 240, height: 240, borderRadius: 120, borderWidth: 2,
-  },
-  timerCircle: {
-    width: 200, height: 200, borderRadius: 100, alignItems: "center", justifyContent: "center", borderWidth: 3,
-  },
-  timerText: { fontFamily: "Nunito_800ExtraBold", fontSize: 44 },
   progressBarBg: {
-    width: 100, height: 4, backgroundColor: "rgba(128,128,128,0.2)", borderRadius: 2, marginTop: 12, overflow: "hidden",
+    width: 110, height: 3, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 2, marginTop: 14, overflow: "hidden",
   },
   progressBarFill: { height: "100%", borderRadius: 2 },
-  completedWrap: { alignItems: "center", gap: 4 },
-  completedText: { fontFamily: "Nunito_700Bold", fontSize: 20, marginTop: 8 },
-  completedSub: { fontFamily: "Nunito_500Medium", fontSize: 14 },
-  cueCard: {
-    flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 24, marginTop: 8,
-    padding: 14, borderRadius: 14,
-  },
-  cueText: { fontFamily: "Nunito_500Medium", fontSize: 13, flex: 1, lineHeight: 18, fontStyle: "italic" },
-  controls: { paddingHorizontal: 20, paddingBottom: 100, width: "100%" },
-  controlRow: { flexDirection: "row", gap: 12, alignItems: "center" },
+  completedWrap: { alignItems: "center", gap: 6 },
+  completedText: { fontFamily: "Nunito_700Bold", fontSize: 20, marginTop: 8, color: "#fff" },
+  completedSub: { fontFamily: "Nunito_500Medium", fontSize: 14, color: "rgba(255,255,255,0.75)" },
   mainBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 16, borderRadius: 16,
   },
   mainBtnText: { fontFamily: "Nunito_700Bold", fontSize: 17, color: "#fff" },
-  secondaryBtn: {
-    width: 52, height: 52, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center",
+
+  /* ── Immersive session ── */
+  immersiveWrap: { flex: 1, width: "100%" },
+  immersiveTopBar: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 20, paddingBottom: 12,
   },
+  immersiveBackBtn: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center", justifyContent: "center",
+  },
+  immersiveSessionName: { fontFamily: "Nunito_700Bold", fontSize: 18, color: "#fff" },
+  immersiveSubtitle: { fontFamily: "Nunito_500Medium", fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 2 },
+  immersiveCenter: { flex: 1, alignItems: "center", justifyContent: "center" },
+  orbRing1: { position: "absolute", width: 220, height: 220, borderRadius: 110, borderWidth: 2 },
+  orbRing2: { position: "absolute", width: 220, height: 220, borderRadius: 110, borderWidth: 1.5 },
+  orbRing3: { position: "absolute", width: 220, height: 220, borderRadius: 110, borderWidth: 1 },
+  timerCircle: {
+    width: 190, height: 190, borderRadius: 95, alignItems: "center", justifyContent: "center", borderWidth: 2,
+  },
+  timerText: { fontFamily: "Nunito_800ExtraBold", fontSize: 48, color: "#fff" },
+  immersiveCueCard: {
+    flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 24, marginBottom: 12,
+    padding: 14, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  immersiveCueText: { fontFamily: "Nunito_500Medium", fontSize: 13, flex: 1, lineHeight: 18, fontStyle: "italic", color: "rgba(255,255,255,0.9)" },
+  immersiveControls: {
+    alignItems: "center", paddingHorizontal: 24, gap: 12,
+  },
+  immersivePauseBtn: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center",
+  },
+  immersivePausedRow: { flexDirection: "row", gap: 12 },
+  immersiveBtn: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "#fff", paddingHorizontal: 28, paddingVertical: 14, borderRadius: 20,
+    shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4,
+  },
+  immersiveBtnText: { fontFamily: "Nunito_700Bold", fontSize: 16 },
 });
