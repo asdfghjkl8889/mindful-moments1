@@ -5,7 +5,6 @@ import {
   View,
   Pressable,
   ScrollView,
-  FlatList,
   useColorScheme,
   Platform,
   Switch,
@@ -411,7 +410,7 @@ export default function MeditateScreen() {
 
       {!isTimerRunning && !completed ? (
         <ScrollView
-          style={{ flex: 1 }}
+          style={{ flex: 1, width: "100%" }}
           contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? 120 : 120 }}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
@@ -449,16 +448,17 @@ export default function MeditateScreen() {
           </LinearGradient>
 
           <Text style={[styles.sectionLabel, { color: colors.text }]}>Guided Sessions</Text>
-          <FlatList
+          <ScrollView
             horizontal
-            data={GUIDED_MEDITATIONS}
-            keyExtractor={(m) => m.id}
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.guidedRow}
             nestedScrollEnabled
-            scrollEnabled
-            renderItem={({ item: m }) => (
+            directionalLockEnabled={false}
+            contentContainerStyle={styles.guidedRow}
+            style={Platform.OS === "web" ? ({ overflowX: "scroll", flexShrink: 0 } as any) : undefined}
+          >
+            {GUIDED_MEDITATIONS.map((m) => (
               <GuidedCard
+                key={m.id}
                 meditation={m}
                 selected={selectedGuided.id === m.id}
                 onPress={() => {
@@ -466,8 +466,8 @@ export default function MeditateScreen() {
                   if (Platform.OS !== "web") Haptics.selectionAsync();
                 }}
               />
-            )}
-          />
+            ))}
+          </ScrollView>
 
           <View style={[styles.selectedGuided, { backgroundColor: selectedGuided.color + "12", borderColor: colors.cardBorder }]}>
             <Ionicons name={selectedGuided.icon as any} size={24} color={selectedGuided.color} />
@@ -482,7 +482,9 @@ export default function MeditateScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             nestedScrollEnabled
+            directionalLockEnabled={false}
             contentContainerStyle={styles.durationRow}
+            style={Platform.OS === "web" ? ({ overflowX: "scroll", flexShrink: 0 } as any) : undefined}
           >
             {DURATIONS.map((d) => (
               <Pressable
