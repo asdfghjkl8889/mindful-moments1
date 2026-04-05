@@ -34,6 +34,16 @@ A mindfulness and wellness mobile app built with Expo React Native. Converted fr
 - Modal routes: Profile, Daily Inspiration
 - Stack routes: Game screens (/game/breathing, /game/memory, /game/focus)
 
+## Authentication & Cloud Sync
+- **Auth**: Email + password sign-up/sign-in via Express + PostgreSQL
+- **Database tables**: `users`, `user_sessions`, `user_progress`
+- **API routes**: POST /api/auth/register, /api/auth/login, /api/auth/logout, GET /api/auth/me, PUT /api/auth/profile, POST/GET /api/user/sync
+- **Auth context**: `contexts/AuthContext.tsx` — stores token in AsyncStorage, provides `register`, `login`, `logout`, `syncProgress`, `loadProgress`
+- **Auto-sync**: On register, uploads local AsyncStorage data to server. On login, downloads server data to restore progress
+- **Screens**: `app/welcome.tsx` (onboarding), `app/auth/register.tsx`, `app/auth/login.tsx`
+- **Auth gate**: `_layout.tsx` wraps app in `AuthProvider`, `AuthGate` component redirects unauthenticated users to `/welcome`
+- **Profile**: Shows account email + "Sign Out" button
+
 ## Recent Changes
 - Apr 2026: Major redesign — immersive home hero (time-of-day gradient), Quick Actions row, "For You Today" mood-aware recommendations, full-screen orbital-ring meditation experience, colorful gradient guided session cards
 - Apr 2026: Rebuilt Journal with 2-tab system: Entries + Gratitude Wall (photo tiles from journal + standalone tiles)

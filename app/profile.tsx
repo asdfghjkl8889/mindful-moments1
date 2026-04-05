@@ -17,6 +17,7 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { storage, ProfileData, StreakData } from "@/lib/storage";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AVATARS = [
   { key: "lotus", icon: "flower", color: "#B39DDB" },
@@ -32,6 +33,7 @@ export default function ProfileScreen() {
   const isDark = colorScheme === "dark";
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
+  const { user, logout } = useAuth();
   const [profile, setProfile] = useState<ProfileData>({
     name: "",
     avatar: "lotus",
@@ -260,21 +262,55 @@ export default function ProfileScreen() {
         ))}
       </View>
 
-      <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-        <View
+      {/* Account section */}
+      <View style={{ paddingHorizontal: 20, marginTop: 24, gap: 10 }}>
+        {user && (
+          <View
+            style={[
+              styles.infoCard,
+              { backgroundColor: colors.tealLight, borderColor: colors.cardBorder },
+            ]}
+          >
+            <Ionicons name="cloud-done" size={20} color={colors.tint} />
+            <View style={{ flex: 1 }}>
+              <Text style={[{ fontFamily: "Nunito_600SemiBold", fontSize: 13, color: colors.tint }]}>
+                Progress saved to cloud
+              </Text>
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                {user.email}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        <Pressable
           style={[
             styles.infoCard,
-            {
-              backgroundColor: colors.tealLight,
-              borderColor: colors.cardBorder,
-            },
+            { backgroundColor: isDark ? "#3a1a1a" : "#fff0f0", borderColor: "#ffcccc" },
           ]}
+          onPress={() => {
+            if (Platform.OS !== "web") {
+              Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Sign Out",
+                  style: "destructive",
+                  onPress: async () => {
+                    await logout();
+                    router.replace("/welcome");
+                  },
+                },
+              ]);
+            } else {
+              logout().then(() => router.replace("/welcome"));
+            }
+          }}
         >
-          <Ionicons name="information-circle" size={20} color={colors.tint} />
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            All your data is stored privately on your device. No account needed.
+          <Ionicons name="log-out-outline" size={20} color="#e53935" />
+          <Text style={[styles.infoText, { color: "#e53935", fontFamily: "Nunito_600SemiBold" }]}>
+            Sign Out
           </Text>
-        </View>
+        </Pressable>
       </View>
     </ScrollView>
   );
