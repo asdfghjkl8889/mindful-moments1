@@ -163,29 +163,34 @@ function MiniMoodGarden({ moods, isDark }: { moods: MoodEntry[]; isDark: boolean
 function MoodButton({
   mood,
   selected,
+  disabled,
   onPress,
 }: {
   mood: (typeof MOODS)[0];
   selected: boolean;
+  disabled: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.moodBtn,
-        selected && { backgroundColor: mood.color + "20", borderColor: mood.color },
-        pressed && { transform: [{ scale: 0.92 }] },
+        selected && { backgroundColor: "rgba(255,255,255,0.35)", borderColor: "#fff" },
+        !disabled && pressed && { transform: [{ scale: 0.92 }] },
+        disabled && !selected && { opacity: 0.45 },
       ]}
     >
       <Ionicons
         name={mood.icon as any}
-        size={28}
-        color={selected ? mood.color : "#B2BEC3"}
+        size={26}
+        color={selected ? mood.color : "rgba(255,255,255,0.85)"}
       />
-      <Text style={[styles.moodLabel, { color: selected ? mood.color : "#B2BEC3" }]}>
+      <Text style={[styles.moodLabel, { color: selected ? mood.color : "rgba(255,255,255,0.8)" }]}>
         {mood.label}
       </Text>
+      {selected && <View style={[styles.moodSelectedDot, { backgroundColor: mood.color }]} />}
     </Pressable>
   );
 }
@@ -622,29 +627,30 @@ export default function HomeScreen() {
           </Text>
           <Text style={styles.heroTitle}>Your mindful space</Text>
           <Text style={styles.heroSub}>How are you feeling today?</Text>
+
+          {/* ─── Mood Row inside hero ─── */}
+          <View style={styles.moodRowInHero}>
+            {MOODS.map((mood) => (
+              <MoodButton
+                key={mood.key}
+                mood={mood}
+                selected={selectedMood === mood.key}
+                disabled={moodSaved}
+                onPress={() => handleMoodSelect(mood.key)}
+              />
+            ))}
+          </View>
+
+          {moodSaved && (
+            <View style={styles.moodSavedWrap}>
+              <Ionicons name="checkmark-circle" size={16} color="rgba(255,255,255,0.9)" />
+              <Text style={[styles.moodSavedText, { color: "rgba(255,255,255,0.9)" }]}>
+                Today's mood saved ✓
+              </Text>
+            </View>
+          )}
         </LinearGradient>
       </Animated.View>
-
-      {/* ─── Mood Row ─── */}
-      <View style={[styles.moodRow, { marginTop: -8 }]}>
-        {MOODS.map((mood) => (
-          <MoodButton
-            key={mood.key}
-            mood={mood}
-            selected={selectedMood === mood.key}
-            onPress={() => handleMoodSelect(mood.key)}
-          />
-        ))}
-      </View>
-
-      {moodSaved && (
-        <View style={styles.moodSavedWrap}>
-          <Ionicons name="checkmark-circle" size={16} color={colors.sage} />
-          <Text style={[styles.moodSavedText, { color: colors.sage }]}>
-            Today's mood recorded
-          </Text>
-        </View>
-      )}
 
       {/* ─── Quick Actions ─── */}
       <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(100).duration(600) : undefined}>
@@ -794,7 +800,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   hero: {
-    paddingHorizontal: 24, paddingBottom: 32,
+    paddingHorizontal: 24, paddingBottom: 20,
     borderBottomLeftRadius: 32, borderBottomRightRadius: 32,
     shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8,
   },
@@ -809,15 +815,18 @@ const styles = StyleSheet.create({
   heroGreeting: { fontFamily: "Nunito_500Medium", fontSize: 16, color: "rgba(255,255,255,0.85)", marginBottom: 6 },
   heroTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 30, color: "#fff", marginBottom: 8 },
   heroSub: { fontFamily: "Nunito_500Medium", fontSize: 14, color: "rgba(255,255,255,0.75)" },
-  moodRow: {
-    flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, marginBottom: 8,
+  moodRowInHero: {
+    flexDirection: "row", justifyContent: "space-between", marginTop: 20, marginBottom: 4,
   },
   moodBtn: {
-    alignItems: "center", justifyContent: "center", width: 62, height: 72, borderRadius: 16, borderWidth: 2, borderColor: "transparent", gap: 4,
+    alignItems: "center", justifyContent: "center", width: 58, height: 70, borderRadius: 16,
+    borderWidth: 2, borderColor: "rgba(255,255,255,0.25)", backgroundColor: "rgba(255,255,255,0.18)",
+    gap: 4,
   },
-  moodLabel: { fontFamily: "Nunito_600SemiBold", fontSize: 11 },
+  moodLabel: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "rgba(255,255,255,0.9)" },
+  moodSelectedDot: { width: 5, height: 5, borderRadius: 3, marginTop: 1 },
   moodSavedWrap: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 8, paddingHorizontal: 20,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 10,
   },
   moodSavedText: { fontFamily: "Nunito_500Medium", fontSize: 13 },
   larryCard: {
