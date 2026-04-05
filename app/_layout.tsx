@@ -97,6 +97,10 @@ function RootLayoutNav() {
           name="quick-calm"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="overthinking"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </AuthGate>
   );
