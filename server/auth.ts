@@ -22,7 +22,7 @@ export function registerAuthRoutes(app: Express) {
   // Register
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { email, name, password, avatar = "lotus" } = req.body;
+      const { email, name, password, avatar = "lotus", recoveryQuestion, recoveryAnswer } = req.body;
 
       if (!email || !name || !password) {
         return res.status(400).json({ error: "Email, name and password are required" });
@@ -37,11 +37,14 @@ export function registerAuthRoutes(app: Express) {
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
+      const answerHash = (recoveryQuestion && recoveryAnswer)
+        ? await bcrypt.hash(recoveryAnswer.trim().toLowerCase(), 10)
+        : null;
 
       const userResult = await pool.query(
-        `INSERT INTO users (email, name, password_hash, avatar)
-         VALUES ($1, $2, $3, $4) RETURNING id, email, name, avatar`,
-        [email.toLowerCase(), name.trim(), passwordHash, avatar]
+        `INSERT INTO users (email, name, password_hash, avatar, recovery_question, recovery_answer_hash)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, name, avatar`,
+        [email.toLowerCase(), name.trim(), passwordHash, avatar, recoveryQuestion || null, answerHash]
       );
       const user = userResult.rows[0];
 
@@ -202,6 +205,70 @@ export function registerAuthRoutes(app: Express) {
 
       return res.json({ data });
     } catch (err) {
+      return res.status(500).json({ error: "Server error" });
+    }
+  });
+
+  // Get security question for an email (does not confirm account exists to prevent enumeration)
+  app.get("/api/auth/security-question", async (req: Request, res: Response) => {
+    try {
+      const email = (req.query.email as string || "").toLowerCase().trim();
+      if (!email) return res.status(400).json({ error: "Email is required" });
+
+      const result = await pool.query(
+        "SELECT recovery_question FROM users WHERE email = $1",
+        [email]
+      );
+
+      if (result.rows.length === 0 || !result.rows[0].recovery_question) {
+        return res.status(404).json({ error: "No security question set for this account" });
+      }
+
+      return res.json({ question: result.rows[0].recovery_question });
+    } catch (err) {
+      return res.status(500).json({ error: "Server error" });
+    }
+  });
+
+  // Reset password using security answer
+  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { email, answer, newPassword } = req.body;
+
+      if (!email || !answer || !newPassword) {
+        return res.status(400).json({ error: "Email, answer and new password are required" });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+
+      const result = await pool.query(
+        "SELECT id, recovery_answer_hash FROM users WHERE email = $1",
+        [email.toLowerCase().trim()]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "No account found with this email" });
+      }
+
+      const user = result.rows[0];
+      if (!user.recovery_answer_hash) {
+        return res.status(400).json({ error: "No security question set for this account" });
+      }
+
+      const valid = await bcrypt.compare(answer.trim().toLowerCase(), user.recovery_answer_hash);
+      if (!valid) {
+        return res.status(401).json({ error: "Incorrect answer. Please try again." });
+      }
+
+      const newHash = await bcrypt.hash(newPassword, 10);
+      await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, user.id]);
+      // Invalidate all existing sessions for security
+      await pool.query("DELETE FROM user_sessions WHERE user_id = $1", [user.id]);
+
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Reset password error:", err);
       return res.status(500).json({ error: "Server error" });
     }
   });

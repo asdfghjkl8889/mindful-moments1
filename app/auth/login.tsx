@@ -109,6 +109,15 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
+          <TouchableOpacity
+            onPress={() => router.push("/auth/forgot-password")}
+            style={{ alignItems: "center", marginBottom: 16 }}
+          >
+            <Text style={[styles.switchText, { color: "rgba(255,255,255,0.55)" }]}>
+              Forgot password?
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity onPress={() => router.replace("/auth/register")} style={styles.switchLink}>
             <Text style={styles.switchText}>
               Don't have an account? <Text style={styles.switchBold}>Create one</Text>

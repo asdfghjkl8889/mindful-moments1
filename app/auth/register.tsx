@@ -18,6 +18,17 @@ import { useAuth } from "@/contexts/AuthContext";
 const AVATARS = ["🐢", "🌸", "🦋", "🌿", "🌻", "🐬", "🦚", "🌈"];
 const AVATAR_KEYS = ["turtle", "lotus", "butterfly", "leaf", "sunflower", "dolphin", "peacock", "rainbow"];
 
+const SECURITY_QUESTIONS = [
+  "What was the name of your first pet?",
+  "What city were you born in?",
+  "What was your childhood nickname?",
+  "What is your mother's maiden name?",
+  "What was the name of your elementary school?",
+  "What was your favorite childhood book?",
+  "What is the name of your oldest sibling?",
+  "What street did you grow up on?",
+];
+
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const { register } = useAuth();
@@ -28,6 +39,10 @@ export default function RegisterScreen() {
   const [avatarIdx, setAvatarIdx] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [recoveryQuestion, setRecoveryQuestion] = useState(SECURITY_QUESTIONS[0]);
+  const [recoveryAnswer, setRecoveryAnswer] = useState("");
+  const [showQuestionPicker, setShowQuestionPicker] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -37,10 +52,17 @@ export default function RegisterScreen() {
     if (!name.trim()) { setError("Please enter your name"); return; }
     if (!email.trim()) { setError("Please enter your email"); return; }
     if (!password) { setError("Please enter a password"); return; }
+    if (showRecovery && !recoveryAnswer.trim()) {
+      setError("Please enter an answer for your security question"); return;
+    }
 
     setLoading(true);
     try {
-      await register(email.trim(), name.trim(), password, AVATAR_KEYS[avatarIdx]);
+      await register(
+        email.trim(), name.trim(), password, AVATAR_KEYS[avatarIdx],
+        showRecovery ? recoveryQuestion : undefined,
+        showRecovery ? recoveryAnswer.trim() : undefined,
+      );
       router.replace("/(tabs)");
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");
@@ -120,6 +142,71 @@ export default function RegisterScreen() {
             returnKeyType="done"
             onSubmitEditing={handleRegister}
           />
+
+          {/* Optional security question */}
+          <TouchableOpacity
+            onPress={() => setShowRecovery(!showRecovery)}
+            style={styles.recoveryToggle}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.recoveryToggleText}>
+              {showRecovery ? "▼" : "▶"} Set a recovery question{" "}
+              <Text style={{ color: "rgba(255,255,255,0.45)", fontFamily: "Nunito_400Regular" }}>
+                (recommended)
+              </Text>
+            </Text>
+          </TouchableOpacity>
+
+          {showRecovery && (
+            <View style={styles.recoveryBox}>
+              <Text style={styles.recoveryHint}>
+                🔐 If you forget your password, you'll answer this to recover your account.
+              </Text>
+
+              <Text style={styles.label}>Security question</Text>
+              <TouchableOpacity
+                style={styles.questionSelector}
+                onPress={() => setShowQuestionPicker(!showQuestionPicker)}
+              >
+                <Text style={styles.questionSelectorText} numberOfLines={2}>{recoveryQuestion}</Text>
+                <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginTop: 2 }}>
+                  Tap to change ▼
+                </Text>
+              </TouchableOpacity>
+
+              {showQuestionPicker && (
+                <View style={styles.questionList}>
+                  {SECURITY_QUESTIONS.map((q) => (
+                    <TouchableOpacity
+                      key={q}
+                      style={[
+                        styles.questionOption,
+                        recoveryQuestion === q && styles.questionOptionSelected,
+                      ]}
+                      onPress={() => { setRecoveryQuestion(q); setShowQuestionPicker(false); }}
+                    >
+                      <Text style={[
+                        styles.questionOptionText,
+                        recoveryQuestion === q && { color: "#fff", fontFamily: "Nunito_600SemiBold" },
+                      ]}>
+                        {q}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              <Text style={styles.label}>Your answer</Text>
+              <TextInput
+                style={styles.input}
+                value={recoveryAnswer}
+                onChangeText={setRecoveryAnswer}
+                placeholder="Answer (not case sensitive)"
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                returnKeyType="done"
+              />
+            </View>
+          )}
 
           {!!error && (
             <View style={styles.errorBox}>
@@ -249,5 +336,73 @@ const styles = StyleSheet.create({
   switchBold: {
     fontFamily: "Nunito_700Bold",
     color: "#fff",
+  },
+  recoveryToggle: {
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    borderStyle: "dashed",
+  },
+  recoveryToggleText: {
+    fontSize: 14,
+    fontFamily: "Nunito_600SemiBold",
+    color: "rgba(255,255,255,0.75)",
+  },
+  recoveryBox: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  recoveryHint: {
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    color: "rgba(255,255,255,0.65)",
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  questionSelector: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  questionSelectorText: {
+    fontSize: 14,
+    fontFamily: "Nunito_500Medium",
+    color: "#fff",
+    lineHeight: 20,
+  },
+  questionList: {
+    backgroundColor: "rgba(0,0,0,0.2)",
+    borderRadius: 10,
+    marginBottom: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  questionOption: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.08)",
+  },
+  questionOptionSelected: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  questionOptionText: {
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    color: "rgba(255,255,255,0.8)",
+    lineHeight: 18,
   },
 });

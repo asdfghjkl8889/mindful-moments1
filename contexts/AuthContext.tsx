@@ -30,7 +30,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  register: (email: string, name: string, password: string, avatar?: string) => Promise<void>;
+  register: (email: string, name: string, password: string, avatar?: string, recoveryQuestion?: string, recoveryAnswer?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (name: string, avatar: string) => Promise<void>;
@@ -123,10 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   };
 
-  const register = async (email: string, name: string, password: string, avatar = "lotus") => {
+  const register = async (email: string, name: string, password: string, avatar = "lotus", recoveryQuestion?: string, recoveryAnswer?: string) => {
     const data = await authFetch("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, name, password, avatar }),
+      body: JSON.stringify({ email, name, password, avatar, recoveryQuestion, recoveryAnswer }),
     });
     await persist(data.user, data.token);
     // Upload any existing local progress to the new account
