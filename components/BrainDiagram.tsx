@@ -50,7 +50,7 @@ export function BrainDiagram({ isDark, width = 300 }: Props) {
             Prefrontal Cortex
           </Text>
         </View>
-        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#00897B", marginLeft: 12, marginTop: 2 }}>↓</Text>
+        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#00897B", marginLeft: 18, marginTop: 2 }}>↘</Text>
       </View>
 
       {/* Amygdala label — positioned over the red dot (center-right of brain) */}
