@@ -697,9 +697,62 @@ export default function HomeScreen() {
         </LinearGradient>
       </Animated.View>
 
-      {/* ─── Quick Actions ─── */}
-      <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(100).duration(600) : undefined}>
-        <QuickActions />
+      {/* ─── Larry + Daily Inspiration ─── */}
+      <Animated.View
+        entering={Platform.OS !== "web" ? FadeInDown.delay(100).duration(600) : undefined}
+        style={{ flexDirection: "row", marginHorizontal: 16, marginTop: 16, gap: 12 }}
+      >
+        {/* Larry */}
+        <View style={{
+          flex: 0.42,
+          borderRadius: 20,
+          overflow: "hidden",
+          backgroundColor: isDark ? Colors.dark.card : "#F0FBF9",
+          borderWidth: 1,
+          borderColor: isDark ? Colors.dark.cardBorder : "#C8EDE8",
+          alignItems: "center",
+          justifyContent: "center",
+          paddingVertical: 14,
+        }}>
+          <CharacterBubble character="larry" message={larryMsg} size={70} animation="bob" />
+        </View>
+
+        {/* Daily Inspiration */}
+        <Pressable
+          onPress={() => router.push("/inspiration")}
+          style={({ pressed }) => ({
+            flex: 0.58,
+            borderRadius: 20,
+            overflow: "hidden",
+            opacity: pressed ? 0.9 : 1,
+          })}
+        >
+          <LinearGradient
+            colors={isDark ? ["#1A2744", "#1C3060"] : ["#E8F4FD", "#D0EAF8"]}
+            style={{ flex: 1, padding: 14, minHeight: 130 }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                <Ionicons name="sparkles" size={13} color={isDark ? "#81D4FA" : "#1565C0"} />
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: isDark ? "#81D4FA" : "#1565C0", letterSpacing: 0.3 }}>
+                  DAILY QUOTE
+                </Text>
+              </View>
+              <Pressable onPress={(e) => { e.stopPropagation(); shuffleQuote(); }}>
+                <Ionicons name="shuffle" size={15} color={isDark ? "rgba(129,212,250,0.6)" : "rgba(21,101,192,0.5)"} />
+              </Pressable>
+            </View>
+            <Text
+              numberOfLines={4}
+              style={{ fontFamily: "Nunito_600SemiBold", fontSize: 12, color: isDark ? "#E3F2FD" : "#0D47A1", lineHeight: 17, flex: 1 }}
+            >
+              "{quote.text}"
+            </Text>
+            <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 10, color: isDark ? "rgba(227,242,253,0.6)" : "rgba(13,71,161,0.65)", marginTop: 6 }}>
+              — {quote.author}
+            </Text>
+          </LinearGradient>
+        </Pressable>
       </Animated.View>
 
       {/* ─── For You Today ─── */}
@@ -710,13 +763,6 @@ export default function HomeScreen() {
       {/* ── Discover section ── */}
       <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(180).duration(600) : undefined}>
         <DiscoverSection isDark={isDark} />
-      </Animated.View>
-
-      <Animated.View
-        entering={Platform.OS !== "web" ? FadeInDown.delay(200).duration(600) : undefined}
-        style={{ marginHorizontal: 20, marginTop: 20 }}
-      >
-        <LarryTurtle message={larryMsg} mood={selectedMood} />
       </Animated.View>
 
       <Animated.View
@@ -836,34 +882,6 @@ export default function HomeScreen() {
         </View>
       </Animated.View>
 
-      <Animated.View
-        entering={Platform.OS !== "web" ? FadeInDown.delay(300).duration(600) : undefined}
-      >
-        <Pressable onPress={() => router.push("/inspiration")}>
-          <View
-            style={[styles.quoteCard, { backgroundColor: colors.tealLight, borderColor: colors.cardBorder }]}
-          >
-            <View style={styles.quoteHeader}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Ionicons name="sparkles" size={20} color={colors.tint} />
-                <Text style={[styles.quoteBadge, { color: colors.tint }]}>Daily Inspiration</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
-            </View>
-            <Text style={[styles.quoteText, { color: colors.text }]}>
-              "{quote.text}"
-            </Text>
-            <Text style={[styles.quoteAuthor, { color: colors.textSecondary }]}>
-              - {quote.author}
-            </Text>
-          </View>
-        </Pressable>
-
-        <Pressable onPress={shuffleQuote} style={styles.shuffleWrap}>
-          <Ionicons name="shuffle" size={14} color={colors.textTertiary} />
-          <Text style={[styles.shuffleText, { color: colors.textTertiary }]}>Shuffle quote</Text>
-        </Pressable>
-      </Animated.View>
 
       <Animated.View
         entering={Platform.OS !== "web" ? FadeInDown.delay(400).duration(600) : undefined}
