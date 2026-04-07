@@ -41,11 +41,11 @@ interface Plant {
 }
 
 const MOODS = [
-  { key: "happy",    color: "#66BB6A", label: "Happy" },
-  { key: "good",     color: "#81C784", label: "Good" },
-  { key: "neutral",  color: "#FFD54F", label: "Okay" },
-  { key: "sad",      color: "#FF8A65", label: "Sad" },
-  { key: "stressed", color: "#EF5350", label: "Stressed" },
+  { key: "happy",    icon: "sunny",          color: "#66BB6A", label: "Happy" },
+  { key: "good",     icon: "happy",          color: "#81C784", label: "Good" },
+  { key: "neutral",  icon: "remove-circle",  color: "#FFD54F", label: "Okay" },
+  { key: "sad",      icon: "rainy",          color: "#FF8A65", label: "Sad" },
+  { key: "stressed", icon: "thunderstorm",   color: "#EF5350", label: "Stressed" },
 ];
 
 function MoodCalendar({ moods, isDark }: { moods: MoodEntry[]; isDark: boolean }) {
@@ -361,8 +361,46 @@ export default function MoodGardenScreen() {
           </Text>
         </Animated.View>
 
+        {moods.length > 0 && (
+          <Animated.View
+            entering={Platform.OS !== "web" ? FadeInDown.delay(700).duration(500) : undefined}
+            style={{ width: GARDEN_W, marginBottom: 12 }}
+          >
+            <Text style={[styles.tipTitle, { color: colors.text, marginBottom: 12 }]}>Recent Moods</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}>
+              {moods.slice(0, 10).map((entry) => {
+                const moodData = MOODS.find((m) => m.key === entry.mood);
+                return (
+                  <View
+                    key={entry.id}
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.9)",
+                      borderRadius: 14,
+                      paddingVertical: 12,
+                      paddingHorizontal: 14,
+                      alignItems: "center",
+                      gap: 6,
+                      minWidth: 62,
+                    }}
+                  >
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: moodData?.color + "22", alignItems: "center", justifyContent: "center" }}>
+                      <Ionicons name={moodData?.icon as any} size={22} color={moodData?.color} />
+                    </View>
+                    <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 11, color: colors.textSecondary }}>
+                      {new Date(entry.timestamp).toLocaleDateString("en-US", { weekday: "short" })}
+                    </Text>
+                    <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 10, color: colors.textSecondary }}>
+                      {new Date(entry.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </Animated.View>
+        )}
+
         <Animated.View
-          entering={Platform.OS !== "web" ? FadeInDown.delay(750).duration(500) : undefined}
+          entering={Platform.OS !== "web" ? FadeInDown.delay(800).duration(500) : undefined}
           style={{ marginHorizontal: 20, marginBottom: 12 }}
         >
           <Text style={[styles.tipTitle, { color: colors.text, marginBottom: 12 }]}>Mood Calendar 📅</Text>

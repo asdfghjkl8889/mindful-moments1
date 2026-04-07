@@ -879,36 +879,6 @@ export default function HomeScreen() {
       </Animated.View>
 
 
-      {recentMoods.length > 0 && (
-        <Animated.View
-          entering={Platform.OS !== "web" ? FadeInRight.delay(500).duration(600) : undefined}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Moods</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.moodHistoryRow}
-          >
-            {recentMoods.map((entry) => {
-              const moodData = MOODS.find((m) => m.key === entry.mood);
-              return (
-                <View
-                  key={entry.id}
-                  style={[
-                    styles.moodHistoryCard,
-                    { backgroundColor: colors.card, borderColor: colors.cardBorder },
-                  ]}
-                >
-                  <Ionicons name={moodData?.icon as any} size={22} color={moodData?.color} />
-                  <Text style={[styles.moodHistoryLabel, { color: colors.textSecondary }]}>
-                    {new Date(entry.timestamp).toLocaleDateString("en-US", { weekday: "short" })}
-                  </Text>
-                </View>
-              );
-            })}
-          </ScrollView>
-        </Animated.View>
-      )}
     </ScrollView>
 
     {/* Rootd-style panic button */}
