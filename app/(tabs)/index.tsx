@@ -34,33 +34,10 @@ import {
   MoodEntry,
   StreakData,
   ProfileData,
-  ChallengeData,
   getDailyQuote,
   getRandomQuote,
   getLarryMessage,
 } from "@/lib/storage";
-
-const XP_LEVELS = [
-  { name: "Seed",   min: 0,     max: 499,    icon: "🌱", color: "#A5D6A7" },
-  { name: "Sprout", min: 500,   max: 999,    icon: "🌿", color: "#66BB6A" },
-  { name: "Leaf",   min: 1000,  max: 2499,   icon: "🍃", color: "#43A047" },
-  { name: "Branch", min: 2500,  max: 4999,   icon: "🌳", color: "#388E3C" },
-  { name: "Tree",   min: 5000,  max: 9999,   icon: "🎋", color: "#2E7D32" },
-  { name: "Forest", min: 10000, max: 999999, icon: "🌲", color: "#1B5E20" },
-];
-function getXPLevel(xp: number) {
-  return XP_LEVELS.findLast((l) => xp >= l.min) ?? XP_LEVELS[0];
-}
-function getXPProgress(xp: number) {
-  const lv = getXPLevel(xp);
-  return Math.min((xp - lv.min) / (lv.max - lv.min), 1);
-}
-const XP_ACTIVITIES = [
-  { id: "auto_mood",      icon: "happy-outline",    label: "Mood",     xp: 15, color: "#66BB6A" },
-  { id: "auto_meditate",  icon: "leaf-outline",      label: "Meditate", xp: 40, color: "#4DB6AC" },
-  { id: "auto_journal",   icon: "book-outline",      label: "Journal",  xp: 25, color: "#B39DDB" },
-  { id: "auto_gratitude", icon: "heart-outline",     label: "Gratitude",xp: 20, color: "#FF8A80" },
-];
 
 const MOODS = [
   { key: "happy" as const, icon: "sunny", label: "Happy", color: "#66BB6A" },
@@ -560,7 +537,6 @@ export default function HomeScreen() {
   const [quote, setQuote] = useState(getDailyQuote());
   const [larryMsg] = useState(getLarryMessage());
   const [profile, setProfile] = useState<ProfileData>({ name: "", avatar: "lotus" });
-  const [xpData, setXpData] = useState<ChallengeData>({ xp: 0, completedToday: [], badgesEarned: [], lastResetDate: "" });
 
   // Panic button pulse rings
   const pulse1 = useSharedValue(0);
@@ -588,16 +564,14 @@ export default function HomeScreen() {
   }));
 
   const loadData = useCallback(async () => {
-    const [streakData, moods, profileData, cd] = await Promise.all([
+    const [streakData, moods, profileData] = await Promise.all([
       storage.getStreak(),
       storage.getMoods(),
       storage.getProfile(),
-      storage.getChallengeData(),
     ]);
     setStreak(streakData);
     setAllMoods(moods);
     setProfile(profileData);
-    setXpData(cd);
 
     const today = new Date().toISOString().split("T")[0];
     const todayMood = moods.find((m) => m.date === today);
@@ -723,81 +697,6 @@ export default function HomeScreen() {
           )}
         </LinearGradient>
       </Animated.View>
-
-      {/* ─── XP Progress Widget ─── */}
-      {(() => {
-        const level = getXPLevel(xpData.xp);
-        const progress = getXPProgress(xpData.xp);
-        const today = new Date().toISOString().split("T")[0];
-        const effectiveCompleted = xpData.lastResetDate === today ? xpData.completedToday : [];
-        return (
-          <Animated.View
-            entering={Platform.OS !== "web" ? FadeInDown.delay(80).duration(600) : undefined}
-            style={{ marginHorizontal: 16, marginTop: 14 }}
-          >
-            <Pressable
-              onPress={() => router.push("/challenges")}
-              style={({ pressed }) => ({
-                borderRadius: 18,
-                backgroundColor: isDark ? Colors.dark.card : "#F5FBF9",
-                borderWidth: 1,
-                borderColor: isDark ? Colors.dark.cardBorder : "#C8EDE8",
-                padding: 14,
-                opacity: pressed ? 0.9 : 1,
-              })}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-                <Text style={{ fontSize: 26 }}>{level.icon}</Text>
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 14, color: level.color }}>
-                    {level.name} Level
-                  </Text>
-                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: isDark ? "#888" : "#888" }}>
-                    {xpData.xp} XP total
-                  </Text>
-                </View>
-                <View style={{ alignItems: "flex-end" }}>
-                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: isDark ? Colors.dark.text : Colors.light.text }}>
-                    {level.max === 999999 ? "Max" : `${level.max - xpData.xp} to next`}
-                  </Text>
-                </View>
-              </View>
-              <View style={{ height: 7, backgroundColor: isDark ? "#333" : "#E0F2F0", borderRadius: 4, overflow: "hidden", marginBottom: 12 }}>
-                <View style={{ height: 7, backgroundColor: level.color, borderRadius: 4, width: `${Math.round(progress * 100)}%` as any }} />
-              </View>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                {XP_ACTIVITIES.map((act) => {
-                  const done = effectiveCompleted.includes(act.id);
-                  return (
-                    <View key={act.id} style={{
-                      flex: 1,
-                      alignItems: "center",
-                      marginHorizontal: 3,
-                      backgroundColor: done ? act.color + "22" : (isDark ? "#2A2A2A" : "#F0F0F0"),
-                      borderRadius: 12,
-                      paddingVertical: 6,
-                      borderWidth: 1,
-                      borderColor: done ? act.color + "66" : "transparent",
-                    }}>
-                      <Ionicons
-                        name={(done ? act.icon.replace("-outline", "") : act.icon) as any}
-                        size={16}
-                        color={done ? act.color : (isDark ? "#666" : "#AAA")}
-                      />
-                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: done ? act.color : (isDark ? "#555" : "#BBB"), marginTop: 2 }}>
-                        +{act.xp}
-                      </Text>
-                      <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 9, color: done ? act.color : (isDark ? "#444" : "#CCC") }}>
-                        {act.label}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </Pressable>
-          </Animated.View>
-        );
-      })()}
 
       {/* ─── Larry ─── */}
       <Animated.View
