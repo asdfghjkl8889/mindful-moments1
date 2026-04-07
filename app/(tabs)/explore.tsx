@@ -17,7 +17,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 
-type ExploreSection = "resources" | "courses" | "games" | "tools";
+type ExploreSection = "resources" | "courses" | "discover";
 
 const RESOURCE_CATEGORIES = [
   { key: "sleep", label: "Sleep & Music", icon: "musical-notes" },
@@ -202,17 +202,16 @@ export default function ExploreScreen() {
   const isDark = colorScheme === "dark";
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
-  const [activeSection, setActiveSection] = useState<ExploreSection>("tools");
+  const [activeSection, setActiveSection] = useState<ExploreSection>("discover");
   const [resourceCategory, setResourceCategory] = useState("sleep");
   const [selectedCourse, setSelectedCourse] = useState<(typeof COURSES)[0] | null>(null);
 
   const webTopInset = Platform.OS === "web" ? 67 : 0;
 
   const sections: { key: ExploreSection; label: string; icon: string }[] = [
-    { key: "tools", label: "Tools", icon: "apps" },
+    { key: "discover", label: "Discover", icon: "compass" },
     { key: "resources", label: "Resources", icon: "library" },
     { key: "courses", label: "Courses", icon: "school" },
-    { key: "games", label: "Games", icon: "game-controller" },
   ];
 
   const filteredResources = RESOURCES.filter((r) => r.category === resourceCategory);
@@ -235,7 +234,7 @@ export default function ExploreScreen() {
         >
           <Text style={[styles.headerTitle, { color: colors.text }]}>Explore</Text>
           <Text style={[styles.headerSub, { color: colors.textSecondary }]}>
-            Discover mindfulness resources, courses & games
+            Discover mindfulness tools, resources & courses
           </Text>
         </LinearGradient>
       </Animated.View>
@@ -483,7 +482,7 @@ export default function ExploreScreen() {
         </Animated.View>
       )}
 
-      {activeSection === "tools" && (
+      {activeSection === "discover" && (
         <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
 
           {/* ── Featured spotlight ── */}
@@ -569,53 +568,6 @@ export default function ExploreScreen() {
         </Animated.View>
       )}
 
-      {activeSection === "games" && (
-        <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
-          <View style={styles.gamesList}>
-            {[
-              { key: "breathing", title: "Breathing Exercise", desc: "4-4-4 calming breath pattern", icon: "leaf", color: "#4DB6AC" },
-              { key: "memory", title: "Zen Memory", desc: "Match peaceful icons to sharpen focus", icon: "grid", color: "#B39DDB" },
-              { key: "focus", title: "Focus Tap", desc: "Tap targets to train concentration", icon: "eye", color: "#FF8A65" },
-            ].map((game) => (
-              <Pressable
-                key={game.key}
-                onPress={() => {
-                  router.push(`/game/${game.key}`);
-                  if (Platform.OS !== "web") Haptics.selectionAsync();
-                }}
-                style={({ pressed }) => [
-                  styles.gameCard,
-                  { backgroundColor: colors.card, borderColor: colors.cardBorder, opacity: pressed ? 0.85 : 1 },
-                ]}
-              >
-                <View style={[styles.gameIconWrap, { backgroundColor: game.color + "20" }]}>
-                  <Ionicons name={game.icon as any} size={28} color={game.color} />
-                </View>
-                <Text style={[styles.gameTitle, { color: colors.text }]}>{game.title}</Text>
-                <Text style={[styles.gameDesc, { color: colors.textSecondary }]}>{game.desc}</Text>
-                <View style={[styles.playBtn, { backgroundColor: game.color }]}>
-                  <Ionicons name="play" size={16} color="#fff" />
-                  <Text style={styles.playBtnText}>Play</Text>
-                </View>
-              </Pressable>
-            ))}
-          </View>
-
-          <View style={[styles.larryBanner, { backgroundColor: "#E8F5E9", borderColor: colors.cardBorder }]}>
-            <View style={styles.larryBannerRow}>
-              <View style={styles.larryBannerAvatar}>
-                <MaterialCommunityIcons name="turtle" size={28} color={colors.sage} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.larryBannerName, { color: colors.sage }]}>Larry's Game Corner</Text>
-                <Text style={[styles.larryBannerMsg, { color: colors.textSecondary }]}>
-                  Train your mind while having fun! Every game strengthens your focus.
-                </Text>
-              </View>
-            </View>
-          </View>
-        </Animated.View>
-      )}
     </ScrollView>
   );
 }
