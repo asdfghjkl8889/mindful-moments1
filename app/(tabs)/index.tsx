@@ -359,6 +359,47 @@ const fyStyles = StyleSheet.create({
   cardChipText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#fff" },
 });
 
+const DISCOVER_TOOLS = [
+  { title: "Mood Garden", sub: "Your moods as a living garden", emoji: "🌿", grad: ["#1B5E20", "#43A047"] as const, route: "/mood-garden" },
+  { title: "Circadian Rhythm", sub: "Meditate at cortisol peaks", emoji: "🌅", grad: ["#0D47A1", "#1E88E5"] as const, route: "/circadian" },
+  { title: "Quick Calm", sub: "Reset in under 90 seconds", emoji: "⚡", grad: ["#4A148C", "#AB47BC"] as const, route: "/quick-calm" },
+  { title: "Reframe Thoughts", sub: "CBT in 3 simple steps", emoji: "💡", grad: ["#880E4F", "#EC407A"] as const, route: "/negative-thoughts" },
+  { title: "Challenges", sub: "Earn XP, unlock badges", emoji: "🏆", grad: ["#E65100", "#FFA726"] as const, route: "/challenges" },
+  { title: "7-Day Course", sub: "Full wellness week plan", emoji: "📅", grad: ["#00695C", "#26A69A"] as const, route: "/course-week" },
+];
+
+function DiscoverSection({ isDark }: { isDark: boolean }) {
+  const colors = isDark ? Colors.dark : Colors.light;
+  return (
+    <View style={{ marginTop: 28 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: 20, marginBottom: 14 }}>
+        <View>
+          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: colors.text }}>Hidden Gems</Text>
+          <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>Features worth exploring</Text>
+        </View>
+        <Pressable onPress={() => router.push("/(tabs)/explore")} style={{ backgroundColor: colors.tint + "18", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 }}>
+          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 12, color: colors.tint }}>See all</Text>
+        </Pressable>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}>
+        {DISCOVER_TOOLS.map((tool) => (
+          <Pressable
+            key={tool.title}
+            onPress={() => router.push(tool.route as any)}
+            style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1, width: 148, borderRadius: 20, overflow: "hidden" })}
+          >
+            <LinearGradient colors={tool.grad} style={{ padding: 18, height: 148, justifyContent: "flex-end" }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <Text style={{ fontSize: 30, marginBottom: 8 }}>{tool.emoji}</Text>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#fff", marginBottom: 3 }}>{tool.title}</Text>
+              <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 11, color: "rgba(255,255,255,0.8)", lineHeight: 15 }}>{tool.sub}</Text>
+            </LinearGradient>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
 function LarryTurtle({ message, mood }: { message: string; mood: string | null }) {
   const moodMsg = mood && LARRY_MOOD_MESSAGES[mood]
     ? LARRY_MOOD_MESSAGES[mood]
@@ -664,6 +705,11 @@ export default function HomeScreen() {
       {/* ─── For You Today ─── */}
       <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(160).duration(600) : undefined}>
         <ForYouSection mood={selectedMood} isDark={isDark} />
+      </Animated.View>
+
+      {/* ── Discover section ── */}
+      <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(180).duration(600) : undefined}>
+        <DiscoverSection isDark={isDark} />
       </Animated.View>
 
       <Animated.View

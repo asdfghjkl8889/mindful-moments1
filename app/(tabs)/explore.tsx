@@ -388,40 +388,87 @@ export default function ExploreScreen() {
 
       {activeSection === "tools" && (
         <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
-          <View style={styles.toolsGrid}>
+
+          {/* ── Featured spotlight ── */}
+          <Pressable
+            onPress={() => { router.push("/mood-garden"); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
+            style={({ pressed }) => [styles.featuredCard, { opacity: pressed ? 0.9 : 1 }]}
+          >
+            <LinearGradient colors={["#1B5E20", "#2E7D32", "#66BB6A"]} style={styles.featuredGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <View style={styles.featuredBadgeWrap}>
+                <Text style={styles.featuredBadge}>✨  FEATURED TOOL</Text>
+              </View>
+              <Text style={styles.featuredTitle}>Mood Garden</Text>
+              <Text style={styles.featuredDesc}>Watch your daily emotions bloom into a living, evolving garden. The more you track, the more it grows.</Text>
+              <View style={styles.featuredCta}>
+                <Text style={styles.featuredCtaText}>Open Garden</Text>
+                <Ionicons name="arrow-forward" size={14} color="#fff" />
+              </View>
+              <Text style={styles.featuredEmoji}>🌸🌿🌻</Text>
+            </LinearGradient>
+          </Pressable>
+
+          {/* ── Track & Grow ── */}
+          <Text style={[styles.toolCatTitle, { color: colors.text }]}>Track & Grow</Text>
+          <Text style={[styles.toolCatSub, { color: colors.textSecondary }]}>Build streaks, earn XP and measure your progress</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRow}>
             {[
-              { title: "Goals", desc: "Daily, weekly, monthly & yearly", icon: "trophy", color: "#26A69A", bg: "#E0F7FA", route: "/goals" },
-              { title: "Circadian Rhythm", desc: "Meditate at your cortisol peaks", icon: "time", color: "#1565C0", bg: "#E3F2FD", route: "/circadian" },
-              { title: "Challenges", desc: "Daily missions, XP & badges", icon: "trophy", color: "#FFD54F", bg: "#FFF8E1", route: "/challenges" },
-              { title: "7-Day Course", desc: "Full wellness week program", icon: "calendar", color: "#4DB6AC", bg: "#E0F7FA", route: "/course-week" },
-              { title: "Overthinking", desc: "Break thought loops & find calm", icon: "sync-circle", color: "#FF7043", bg: "#FBE9E7", route: "/overthinking" },
-              { title: "Anger Management", desc: "Cool down, log & understand anger", icon: "flame", color: "#EF5350", bg: "#FFEBEE", route: "/anger-management" },
-              { title: "Reframe Thoughts", desc: "CBT thought challenging tool", icon: "bulb", color: "#FF8A80", bg: "#FCE4EC", route: "/negative-thoughts" },
-              { title: "Mood Garden", desc: "Your emotions as a living garden", icon: "flower", color: "#66BB6A", bg: "#E8F5E9", route: "/mood-garden" },
-              { title: "Quick Calm", desc: "60-second mindfulness resets", icon: "flash", color: "#B39DDB", bg: "#F3E5F5", route: "/quick-calm" },
-              { title: "Mindful Games", desc: "Breathing, memory & focus games", icon: "game-controller", color: "#FF8A65", bg: "#FBE9E7", route: "/games" },
-            ].map((tool, i) => (
-              <Animated.View
-                key={tool.title}
-                entering={Platform.OS !== "web" ? FadeInDown.delay(i * 60).duration(400) : undefined}
-                style={styles.toolCard}
-              >
-                <Pressable
-                  onPress={() => { router.push(tool.route as any); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
-                  style={({ pressed }) => [
-                    styles.toolCardInner,
-                    { backgroundColor: tool.bg, opacity: pressed ? 0.85 : 1 },
-                  ]}
-                >
-                  <View style={[styles.toolIconWrap, { backgroundColor: tool.color + "30" }]}>
-                    <Ionicons name={tool.icon as any} size={28} color={tool.color} />
-                  </View>
-                  <Text style={[styles.toolTitle, { color: "#1A1A1A" }]}>{tool.title}</Text>
-                  <Text style={[styles.toolDesc, { color: "#616161" }]}>{tool.desc}</Text>
-                </Pressable>
-              </Animated.View>
+              { title: "Goals", desc: "Daily, weekly & yearly", icon: "trophy", color: "#26A69A", grad: ["#004D40", "#26A69A"], route: "/goals", emoji: "🎯" },
+              { title: "Challenges", desc: "Missions, XP & badges", icon: "ribbon", color: "#FFB300", grad: ["#E65100", "#FFB300"], route: "/challenges", emoji: "🏆" },
+              { title: "Circadian Rhythm", desc: "Meditate at cortisol peaks", icon: "sunny", color: "#1565C0", grad: ["#0D47A1", "#42A5F5"], route: "/circadian", emoji: "🌅" },
+              { title: "7-Day Course", desc: "Full wellness week", icon: "calendar", color: "#4DB6AC", grad: ["#00695C", "#4DB6AC"], route: "/course-week", emoji: "📅" },
+            ].map((t) => (
+              <Pressable key={t.title} onPress={() => { router.push(t.route as any); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
+                style={({ pressed }) => [styles.toolHCard, { opacity: pressed ? 0.88 : 1 }]}>
+                <LinearGradient colors={t.grad as any} style={styles.toolHGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Text style={styles.toolHEmoji}>{t.emoji}</Text>
+                  <Text style={styles.toolHTitle}>{t.title}</Text>
+                  <Text style={styles.toolHDesc}>{t.desc}</Text>
+                </LinearGradient>
+              </Pressable>
             ))}
-          </View>
+          </ScrollView>
+
+          {/* ── Clear Your Mind ── */}
+          <Text style={[styles.toolCatTitle, { color: colors.text }]}>Clear Your Mind</Text>
+          <Text style={[styles.toolCatSub, { color: colors.textSecondary }]}>Tools to break negative patterns and find calm fast</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRow}>
+            {[
+              { title: "Quick Calm", desc: "60-second resets", icon: "flash", color: "#9C27B0", grad: ["#4A148C", "#AB47BC"], route: "/quick-calm", emoji: "⚡" },
+              { title: "Reframe Thoughts", desc: "CBT in 3 steps", icon: "bulb", color: "#E91E63", grad: ["#880E4F", "#F06292"], route: "/negative-thoughts", emoji: "💡" },
+              { title: "Overthinking", desc: "Break thought loops", icon: "sync", color: "#FF7043", grad: ["#BF360C", "#FF7043"], route: "/overthinking", emoji: "🌀" },
+              { title: "Anger Management", desc: "Cool down & log it", icon: "flame", color: "#EF5350", grad: ["#B71C1C", "#EF5350"], route: "/anger-management", emoji: "🧊" },
+            ].map((t) => (
+              <Pressable key={t.title} onPress={() => { router.push(t.route as any); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
+                style={({ pressed }) => [styles.toolHCard, { opacity: pressed ? 0.88 : 1 }]}>
+                <LinearGradient colors={t.grad as any} style={styles.toolHGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Text style={styles.toolHEmoji}>{t.emoji}</Text>
+                  <Text style={styles.toolHTitle}>{t.title}</Text>
+                  <Text style={styles.toolHDesc}>{t.desc}</Text>
+                </LinearGradient>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {/* ── Play ── */}
+          <Text style={[styles.toolCatTitle, { color: colors.text }]}>Play & Train</Text>
+          <Text style={[styles.toolCatSub, { color: colors.textSecondary }]}>Games that secretly train your focus and breathing</Text>
+          <Pressable onPress={() => { router.push("/games"); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
+            style={({ pressed }) => [styles.playBanner, { opacity: pressed ? 0.9 : 1 }]}>
+            <LinearGradient colors={["#1A237E", "#3949AB", "#7986CB"]} style={styles.playBannerGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.playBannerTitle}>Mindful Games Hub</Text>
+                <Text style={styles.playBannerDesc}>Breathing · Zen Memory · Focus Tap</Text>
+              </View>
+              <View style={styles.playBannerRight}>
+                <Text style={{ fontSize: 36 }}>🎮</Text>
+                <View style={styles.playBannerBtn}>
+                  <Text style={styles.playBannerBtnText}>Play</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </Pressable>
+
         </Animated.View>
       )}
 
@@ -583,4 +630,38 @@ const styles = StyleSheet.create({
   },
   toolTitle: { fontFamily: "Nunito_700Bold", fontSize: 14, textAlign: "center" },
   toolDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, textAlign: "center", lineHeight: 15 },
+  // ── new curated tools layout ──
+  featuredCard: { marginHorizontal: 20, borderRadius: 24, overflow: "hidden", marginBottom: 24 },
+  featuredGrad: { padding: 24 },
+  featuredBadgeWrap: {
+    backgroundColor: "rgba(255,255,255,0.2)", alignSelf: "flex-start",
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginBottom: 12,
+  },
+  featuredBadge: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#fff", letterSpacing: 0.6 },
+  featuredTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 28, color: "#fff", marginBottom: 8 },
+  featuredDesc: { fontFamily: "Nunito_500Medium", fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 20, marginBottom: 16 },
+  featuredCta: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: "rgba(255,255,255,0.22)", alignSelf: "flex-start",
+    paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20,
+  },
+  featuredCtaText: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "#fff" },
+  featuredEmoji: { position: "absolute", bottom: 16, right: 20, fontSize: 36 },
+  toolCatTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, marginHorizontal: 20, marginBottom: 2 },
+  toolCatSub: { fontFamily: "Nunito_400Regular", fontSize: 13, marginHorizontal: 20, marginBottom: 14, lineHeight: 18 },
+  toolRow: { paddingHorizontal: 20, gap: 12, paddingBottom: 4 },
+  toolHCard: { width: 150, borderRadius: 20, overflow: "hidden" },
+  toolHGrad: { padding: 18, minHeight: 130, justifyContent: "flex-end" },
+  toolHEmoji: { fontSize: 30, marginBottom: 10 },
+  toolHTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff", marginBottom: 4 },
+  toolHDesc: { fontFamily: "Nunito_500Medium", fontSize: 11, color: "rgba(255,255,255,0.8)", lineHeight: 15 },
+  playBanner: { marginHorizontal: 20, borderRadius: 20, overflow: "hidden", marginBottom: 8 },
+  playBannerGrad: { flexDirection: "row", alignItems: "center", padding: 20, gap: 12 },
+  playBannerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: "#fff", marginBottom: 4 },
+  playBannerDesc: { fontFamily: "Nunito_500Medium", fontSize: 13, color: "rgba(255,255,255,0.75)" },
+  playBannerRight: { alignItems: "center", gap: 10 },
+  playBannerBtn: {
+    backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 16, paddingVertical: 7, borderRadius: 14,
+  },
+  playBannerBtnText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#fff" },
 });
