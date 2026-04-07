@@ -9,6 +9,7 @@ import {
   useColorScheme,
   Platform,
   Alert,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +19,7 @@ import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { storage, ProfileData, StreakData } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
+import { getApiUrl } from "@/lib/query-client";
 
 const AVATARS = [
   { key: "lotus", icon: "flower", color: "#B39DDB" },
@@ -311,6 +313,38 @@ export default function ProfileScreen() {
             Sign Out
           </Text>
         </Pressable>
+
+        {/* Disclaimer */}
+        <View
+          style={[
+            styles.disclaimerCard,
+            { backgroundColor: isDark ? "#1a2520" : "#f0faf9", borderColor: isDark ? "#2d4a3e" : "#b2dfdb" },
+          ]}
+        >
+          <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.disclaimerText, { color: colors.textSecondary }]}>
+            Mindful Moments is a general wellness app and is not a substitute for professional medical advice. If you are in crisis, use the Emergency Resources in the app.
+          </Text>
+        </View>
+
+        {/* Legal links */}
+        <View style={styles.legalRow}>
+          <Pressable
+            onPress={() => Linking.openURL(new URL("/privacy-policy", getApiUrl()).toString())}
+          >
+            <Text style={[styles.legalLink, { color: colors.tint }]}>Privacy Policy</Text>
+          </Pressable>
+          <Text style={[styles.legalDot, { color: colors.textSecondary }]}>{"\u00b7"}</Text>
+          <Pressable
+            onPress={() => router.push("/emergency")}
+          >
+            <Text style={[styles.legalLink, { color: colors.tint }]}>Emergency Resources</Text>
+          </Pressable>
+        </View>
+
+        <Text style={[styles.versionText, { color: colors.textSecondary }]}>
+          Mindful Moments v1.0.0
+        </Text>
       </View>
     </ScrollView>
   );
@@ -431,6 +465,44 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     borderWidth: 1,
+  },
+  disclaimerCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  disclaimerText: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 11,
+    flex: 1,
+    lineHeight: 16,
+  },
+  legalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 12,
+  },
+  legalLink: {
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 12,
+    textDecorationLine: "underline",
+  },
+  legalDot: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+  },
+  versionText: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 8,
   },
   infoText: {
     fontFamily: "Nunito_400Regular",

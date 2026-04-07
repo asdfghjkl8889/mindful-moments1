@@ -15,10 +15,17 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.myapp"
+      "bundleIdentifier": "com.mindfulmoments.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Mindful Moments uses your photo library so you can add photos to your journal entries and Gratitude Wall.",
+        "NSPhotoLibraryAddUsageDescription": "Mindful Moments saves photos to your library when you export gratitude wall images.",
+        "NSCameraUsageDescription": "Mindful Moments uses your camera so you can take photos directly for your journal entries.",
+        "NSMicrophoneUsageDescription": "Mindful Moments uses your microphone to support audio features during meditation sessions."
+      }
     },
     "android": {
-      "package": "com.myapp",
+      "package": "com.mindfulmoments.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,7 +44,14 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Mindful Moments uses your photo library so you can add photos to your journal entries and Gratitude Wall.",
+          "cameraPermission": "Mindful Moments uses your camera so you can take photos for your journal entries."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
