@@ -105,6 +105,10 @@ function RootLayoutNav() {
           name="anger-management"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="circadian"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </AuthGate>
   );

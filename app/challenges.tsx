@@ -47,7 +47,7 @@ const WEEKLY_QUEST = {
 const BADGES = [
   { id: "first_step", name: "First Step", desc: "Complete your first challenge", icon: "footsteps", color: "#66BB6A", xpRequired: 0 },
   { id: "zen_starter", name: "Zen Starter", desc: "Reach 100 XP", icon: "leaf", color: "#4DB6AC", xpRequired: 100 },
-  { id: "mindful_500", name: "Mindful Mind", desc: "Reach 500 XP", icon: "brain", color: "#81D4FA", xpRequired: 500 },
+  { id: "mindful_500", name: "Mindful Mind", desc: "Reach 500 XP", icon: "bulb", color: "#81D4FA", xpRequired: 500 },
   { id: "sprout_badge", name: "Sprout Badge", desc: "Complete 10 challenges", icon: "flower", color: "#FFB74D", xpRequired: 300 },
   { id: "streak_3", name: "3-Day Glow", desc: "Keep a 3-day challenge streak", icon: "flame", color: "#FF8A65", xpRequired: 150 },
   { id: "meditator", name: "Meditator", desc: "Reach 1000 XP", icon: "moon", color: "#B39DDB", xpRequired: 1000 },
