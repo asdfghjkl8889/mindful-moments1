@@ -697,16 +697,13 @@ export default function HomeScreen() {
         </LinearGradient>
       </Animated.View>
 
-      {/* ─── Larry + Daily Inspiration ─── */}
+      {/* ─── Larry ─── */}
       <Animated.View
         entering={Platform.OS !== "web" ? FadeInDown.delay(100).duration(600) : undefined}
-        style={{ flexDirection: "row", marginHorizontal: 16, marginTop: 16, gap: 12 }}
+        style={{ marginHorizontal: 16, marginTop: 16 }}
       >
-        {/* Larry */}
         <View style={{
-          flex: 0.42,
           borderRadius: 20,
-          overflow: "hidden",
           backgroundColor: isDark ? Colors.dark.card : "#F0FBF9",
           borderWidth: 1,
           borderColor: isDark ? Colors.dark.cardBorder : "#C8EDE8",
@@ -716,39 +713,38 @@ export default function HomeScreen() {
         }}>
           <CharacterBubble character="larry" message={larryMsg} size={70} animation="bob" />
         </View>
+      </Animated.View>
 
-        {/* Daily Inspiration */}
+      {/* ─── Daily Inspiration ─── */}
+      <Animated.View
+        entering={Platform.OS !== "web" ? FadeInDown.delay(130).duration(600) : undefined}
+        style={{ marginHorizontal: 16, marginTop: 12 }}
+      >
         <Pressable
           onPress={() => router.push("/inspiration")}
-          style={({ pressed }) => ({
-            flex: 0.58,
-            borderRadius: 20,
-            overflow: "hidden",
-            opacity: pressed ? 0.9 : 1,
-          })}
+          style={({ pressed }) => ({ borderRadius: 20, overflow: "hidden", opacity: pressed ? 0.9 : 1 })}
         >
           <LinearGradient
             colors={isDark ? ["#1A2744", "#1C3060"] : ["#E8F4FD", "#D0EAF8"]}
-            style={{ flex: 1, padding: 14, minHeight: 130 }}
+            style={{ padding: 16 }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <Ionicons name="sparkles" size={13} color={isDark ? "#81D4FA" : "#1565C0"} />
-                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: isDark ? "#81D4FA" : "#1565C0", letterSpacing: 0.3 }}>
+                <Ionicons name="sparkles" size={14} color={isDark ? "#81D4FA" : "#1565C0"} />
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 12, color: isDark ? "#81D4FA" : "#1565C0", letterSpacing: 0.3 }}>
                   DAILY QUOTE
                 </Text>
               </View>
-              <Pressable onPress={(e) => { e.stopPropagation(); shuffleQuote(); }}>
-                <Ionicons name="shuffle" size={15} color={isDark ? "rgba(129,212,250,0.6)" : "rgba(21,101,192,0.5)"} />
+              <Pressable onPress={(e) => { e.stopPropagation(); shuffleQuote(); }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Ionicons name="shuffle" size={14} color={isDark ? "rgba(129,212,250,0.6)" : "rgba(21,101,192,0.5)"} />
+                <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 11, color: isDark ? "rgba(129,212,250,0.6)" : "rgba(21,101,192,0.5)" }}>Shuffle</Text>
               </Pressable>
             </View>
-            <Text
-              numberOfLines={4}
-              style={{ fontFamily: "Nunito_600SemiBold", fontSize: 12, color: isDark ? "#E3F2FD" : "#0D47A1", lineHeight: 17, flex: 1 }}
-            >
+            <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 13, color: isDark ? "#E3F2FD" : "#0D47A1", lineHeight: 19 }}>
               "{quote.text}"
             </Text>
-            <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 10, color: isDark ? "rgba(227,242,253,0.6)" : "rgba(13,71,161,0.65)", marginTop: 6 }}>
+            <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 11, color: isDark ? "rgba(227,242,253,0.6)" : "rgba(13,71,161,0.65)", marginTop: 8 }}>
               — {quote.author}
             </Text>
           </LinearGradient>
