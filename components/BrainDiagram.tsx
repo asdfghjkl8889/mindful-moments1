@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text } from "react-native";
+import { Image } from "expo-image";
 
 interface Props {
   isDark: boolean;
@@ -14,7 +15,7 @@ export function BrainDiagram({ isDark, width = 300 }: Props) {
       <Image
         source={require("@/assets/images/brain_diagram_nobg.png")}
         style={{ width, height }}
-        resizeMode="contain"
+        contentFit="contain"
       />
 
       {/* Prefrontal Cortex label — top-left, over the teal region */}
