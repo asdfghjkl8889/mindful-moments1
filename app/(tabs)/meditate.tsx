@@ -307,6 +307,7 @@ export default function MeditateScreen() {
             }
             storage.addMeditation(selectedDuration, true);
             storage.updateStreak(selectedDuration);
+            storage.awardXP("auto_meditate", 40);
             if (voiceEnabled) {
               Speech.speak("Your meditation is complete. Well done.", {
                 rate: 0.85,

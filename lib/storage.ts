@@ -455,6 +455,18 @@ export const storage = {
     await AsyncStorage.setItem(KEYS.CHALLENGES, JSON.stringify(data));
   },
 
+  async awardXP(activityId: string, amount: number): Promise<number> {
+    let d = await this.getChallengeData();
+    const today = new Date().toISOString().split("T")[0];
+    if (d.lastResetDate !== today) {
+      d = { ...d, completedToday: [], lastResetDate: today };
+    }
+    if (d.completedToday.includes(activityId)) return 0;
+    d = { ...d, xp: d.xp + amount, completedToday: [...d.completedToday, activityId] };
+    await this.saveChallengeData(d);
+    return amount;
+  },
+
   async getWeekCourseProgress(): Promise<WeekCourseProgress> {
     const raw = await AsyncStorage.getItem(KEYS.WEEK_COURSE);
     if (!raw) return { completedSessions: [], startedDate: "" };

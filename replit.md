@@ -44,6 +44,12 @@ A mindfulness and wellness mobile app built with Expo React Native. Converted fr
 - **Auth gate**: `_layout.tsx` wraps app in `AuthProvider`, `AuthGate` component redirects unauthenticated users to `/welcome`
 - **Profile**: Shows account email + "Sign Out" button
 
+## XP System
+- `lib/storage.ts`: `awardXP(activityId, amount)` — loads ChallengeData, checks if activity already done today (resets on new day), adds XP, saves
+- Activity IDs: `auto_mood` (+15), `auto_meditate` (+40), `auto_journal` (+25), `auto_gratitude` (+20)
+- XP is awarded automatically on: mood log (index.tsx), meditation session complete (meditate.tsx), journal entry save (journal.tsx), gratitude wall tile add (journal.tsx)
+- Home screen XP widget: level icon + name + XP bar + 4 activity badges (checked/unchecked) — taps into challenges screen
+
 ## Recent Changes
 - Apr 2026: Major redesign — immersive home hero (time-of-day gradient), Quick Actions row, "For You Today" mood-aware recommendations, full-screen orbital-ring meditation experience, colorful gradient guided session cards
 - Apr 2026: Rebuilt Journal with 2-tab system: Entries + Gratitude Wall (photo tiles from journal + standalone tiles)

@@ -193,6 +193,7 @@ export default function JournalScreen() {
     if (gratitudes.length === 0 && reflection.trim() === "" && !photoUri) return;
     if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     await storage.addJournal(gratitudes, reflection.trim(), photoUri);
+    storage.awardXP("auto_journal", 25);
     setGratitude1(""); setGratitude2(""); setGratitude3("");
     setReflection(""); setPhotoUri(null); setShowCompose(false);
     await loadData();
@@ -202,6 +203,7 @@ export default function JournalScreen() {
     if (!tilePhotoUri) return;
     if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     await storage.addGratitudeTile(tilePhotoUri, tileCaption.trim());
+    storage.awardXP("auto_gratitude", 20);
     setTilePhotoUri(null); setTileCaption(""); setShowTileCompose(false);
     await loadData();
   };
