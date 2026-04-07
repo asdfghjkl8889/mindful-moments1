@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -38,6 +38,99 @@ interface Plant {
   x: number;
   size: number;
   description: string;
+}
+
+const MOODS = [
+  { key: "happy",    color: "#66BB6A", label: "Happy" },
+  { key: "good",     color: "#81C784", label: "Good" },
+  { key: "neutral",  color: "#FFD54F", label: "Okay" },
+  { key: "sad",      color: "#FF8A65", label: "Sad" },
+  { key: "stressed", color: "#EF5350", label: "Stressed" },
+];
+
+function MoodCalendar({ moods, isDark }: { moods: MoodEntry[]; isDark: boolean }) {
+  const colors = isDark ? Colors.dark : Colors.light;
+  const now = new Date();
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+
+  const monthName = new Date(viewYear, viewMonth).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
+
+  const moodMap = useMemo(() => {
+    const map: Record<string, MoodEntry["mood"]> = {};
+    moods.forEach((m) => { map[m.date] = m.mood; });
+    return map;
+  }, [moods]);
+
+  const getMoodColor = (mood: MoodEntry["mood"] | undefined) => {
+    if (!mood) return "transparent";
+    return MOODS.find((m) => m.key === mood)?.color ?? "transparent";
+  };
+
+  const goToPrev = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
+    else setViewMonth(viewMonth - 1);
+  };
+  const goToNext = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
+    else setViewMonth(viewMonth + 1);
+  };
+
+  const cells = Array.from({ length: firstDayOfWeek + daysInMonth }, (_, i) => {
+    if (i < firstDayOfWeek) return null;
+    const day = i - firstDayOfWeek + 1;
+    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return { day, mood: moodMap[dateStr] };
+  });
+
+  return (
+    <View style={{ backgroundColor: "rgba(255,255,255,0.9)", borderRadius: 16, padding: 16, width: GARDEN_W }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <Pressable onPress={goToPrev} hitSlop={12}>
+          <Ionicons name="chevron-back" size={20} color={colors.tint} />
+        </Pressable>
+        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 15, color: colors.text }}>{monthName}</Text>
+        <Pressable onPress={goToNext} hitSlop={12}>
+          <Ionicons name="chevron-forward" size={20} color={colors.tint} />
+        </Pressable>
+      </View>
+
+      <View style={{ flexDirection: "row", marginBottom: 6 }}>
+        {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
+          <Text key={d} style={{ flex: 1, textAlign: "center", fontFamily: "Nunito_600SemiBold", fontSize: 11, color: colors.textSecondary }}>{d}</Text>
+        ))}
+      </View>
+
+      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+        {cells.map((cell, i) => (
+          <View key={i} style={{ width: `${100 / 7}%`, aspectRatio: 1, padding: 2 }}>
+            {cell ? (
+              <View style={{
+                flex: 1, borderRadius: 8, alignItems: "center", justifyContent: "center",
+                backgroundColor: cell.mood ? getMoodColor(cell.mood) + "55" : "transparent",
+              }}>
+                <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 12, color: colors.text }}>{cell.day}</Text>
+                {cell.mood && (
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: getMoodColor(cell.mood), marginTop: 1 }} />
+                )}
+              </View>
+            ) : null}
+          </View>
+        ))}
+      </View>
+
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+        {MOODS.map((m) => (
+          <View key={m.key} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: m.color }} />
+            <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 11, color: colors.textSecondary }}>{m.label}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
 }
 
 const MOOD_PLANT: Record<string, { emoji: string; name: string; color: string; description: string }> = {
@@ -266,6 +359,14 @@ export default function MoodGardenScreen() {
           <Text style={[styles.tipText, { color: colors.textSecondary }]}>
             Log your mood daily on the Home screen. Each entry plants a seed. Happy moods grow sunflowers, calm moods grow lotus, and even stress grows a resilient cactus. Every emotion belongs here.
           </Text>
+        </Animated.View>
+
+        <Animated.View
+          entering={Platform.OS !== "web" ? FadeInDown.delay(750).duration(500) : undefined}
+          style={{ marginHorizontal: 20, marginBottom: 12 }}
+        >
+          <Text style={[styles.tipTitle, { color: colors.text, marginBottom: 12 }]}>Mood Calendar 📅</Text>
+          <MoodCalendar moods={moods} isDark={isDark} />
         </Animated.View>
       </ScrollView>
     </View>
