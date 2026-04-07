@@ -276,66 +276,163 @@ export default function ExploreScreen() {
 
       {activeSection === "resources" && (
         <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryRow}
+
+          {/* ── Featured resource ── */}
+          <Pressable
+            onPress={() => Linking.openURL("https://insighttimer.com/")}
+            style={({ pressed }) => [styles.featuredCard, { opacity: pressed ? 0.9 : 1 }]}
           >
-            {RESOURCE_CATEGORIES.map((c) => (
-              <Pressable
-                key={c.key}
-                onPress={() => {
-                  setResourceCategory(c.key);
-                  if (Platform.OS !== "web") Haptics.selectionAsync();
-                }}
-                style={[
-                  styles.categoryChip,
-                  {
-                    backgroundColor: resourceCategory === c.key ? colors.tint + "20" : colors.card,
-                    borderColor: resourceCategory === c.key ? colors.tint : colors.cardBorder,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={c.icon as any}
-                  size={14}
-                  color={resourceCategory === c.key ? colors.tint : colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.categoryChipText,
-                    { color: resourceCategory === c.key ? colors.tint : colors.textSecondary },
-                  ]}
-                >
-                  {c.label}
-                </Text>
+            <LinearGradient colors={["#1A237E", "#283593", "#5C6BC0"]} style={styles.featuredGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <View style={styles.featuredBadgeWrap}>
+                <Text style={styles.featuredBadge}>🎧  EDITOR'S PICK</Text>
+              </View>
+              <Text style={styles.featuredTitle}>Insight Timer</Text>
+              <Text style={styles.featuredDesc}>The world's largest free meditation library — 190,000+ guided sessions, sleep music, and talks from top teachers.</Text>
+              <View style={styles.featuredCta}>
+                <Text style={styles.featuredCtaText}>Open Free</Text>
+                <Ionicons name="open-outline" size={14} color="#fff" />
+              </View>
+              <Text style={styles.featuredEmoji}>🧘‍♀️🎵</Text>
+            </LinearGradient>
+          </Pressable>
+
+          {/* ── Sleep & Music ── */}
+          <Text style={[styles.toolCatTitle, { color: colors.text }]}>Sleep & Music</Text>
+          <Text style={[styles.toolCatSub, { color: colors.textSecondary }]}>Ambient sounds and music to relax and drift off</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRow}>
+            {RESOURCES.filter(r => r.category === "sleep").map((r) => (
+              <Pressable key={r.title} onPress={() => Linking.openURL(r.url)}
+                style={({ pressed }) => [styles.resCard, { opacity: pressed ? 0.88 : 1 }]}>
+                <LinearGradient colors={["#0d1b2a", r.color]} style={styles.resGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Ionicons name={r.icon as any} size={26} color="#fff" style={{ marginBottom: 10 }} />
+                  <Text style={styles.toolHTitle}>{r.title}</Text>
+                  <Text style={styles.toolHDesc}>{r.desc}</Text>
+                  <Ionicons name="open-outline" size={12} color="rgba(255,255,255,0.6)" style={{ marginTop: 6 }} />
+                </LinearGradient>
               </Pressable>
             ))}
           </ScrollView>
 
-          <View style={styles.resourceList}>
-            {filteredResources.map((r, i) => (
-              <ResourceCard key={i} resource={r} colors={colors} />
+          {/* ── Guided Meditation ── */}
+          <Text style={[styles.toolCatTitle, { color: colors.text }]}>Guided Meditation</Text>
+          <Text style={[styles.toolCatSub, { color: colors.textSecondary }]}>Free guided sessions from world-class teachers</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRow}>
+            {RESOURCES.filter(r => r.category === "guided").map((r) => (
+              <Pressable key={r.title} onPress={() => Linking.openURL(r.url)}
+                style={({ pressed }) => [styles.resCard, { opacity: pressed ? 0.88 : 1 }]}>
+                <LinearGradient colors={["#0d1b2a", r.color]} style={styles.resGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Ionicons name={r.icon as any} size={26} color="#fff" style={{ marginBottom: 10 }} />
+                  <Text style={styles.toolHTitle}>{r.title}</Text>
+                  <Text style={styles.toolHDesc}>{r.desc}</Text>
+                  <Ionicons name="open-outline" size={12} color="rgba(255,255,255,0.6)" style={{ marginTop: 6 }} />
+                </LinearGradient>
+              </Pressable>
             ))}
-          </View>
+          </ScrollView>
+
+          {/* ── Read & Learn ── */}
+          <Text style={[styles.toolCatTitle, { color: colors.text }]}>Read & Learn</Text>
+          <Text style={[styles.toolCatSub, { color: colors.textSecondary }]}>Science-backed articles and mindfulness writing</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRow}>
+            {RESOURCES.filter(r => r.category === "reading").map((r) => (
+              <Pressable key={r.title} onPress={() => Linking.openURL(r.url)}
+                style={({ pressed }) => [styles.resCard, { opacity: pressed ? 0.88 : 1 }]}>
+                <LinearGradient colors={["#0d1b2a", r.color]} style={styles.resGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Ionicons name={r.icon as any} size={26} color="#fff" style={{ marginBottom: 10 }} />
+                  <Text style={styles.toolHTitle}>{r.title}</Text>
+                  <Text style={styles.toolHDesc}>{r.desc}</Text>
+                  <Ionicons name="open-outline" size={12} color="rgba(255,255,255,0.6)" style={{ marginTop: 6 }} />
+                </LinearGradient>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {/* ── Other Apps + Community ── */}
+          <Text style={[styles.toolCatTitle, { color: colors.text }]}>Discover More</Text>
+          <Text style={[styles.toolCatSub, { color: colors.textSecondary }]}>Other apps and communities worth exploring</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.toolRow, { paddingBottom: 8 }]}>
+            {RESOURCES.filter(r => r.category === "apps" || r.category === "community").map((r) => (
+              <Pressable key={r.title} onPress={() => Linking.openURL(r.url)}
+                style={({ pressed }) => [styles.resCard, { opacity: pressed ? 0.88 : 1 }]}>
+                <LinearGradient colors={["#0d1b2a", r.color]} style={styles.resGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <Ionicons name={r.icon as any} size={26} color="#fff" style={{ marginBottom: 10 }} />
+                  <Text style={styles.toolHTitle}>{r.title}</Text>
+                  <Text style={styles.toolHDesc}>{r.desc}</Text>
+                  <Ionicons name="open-outline" size={12} color="rgba(255,255,255,0.6)" style={{ marginTop: 6 }} />
+                </LinearGradient>
+              </Pressable>
+            ))}
+          </ScrollView>
+
         </Animated.View>
       )}
 
       {activeSection === "courses" && !selectedCourse && (
         <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
-          <View style={styles.courseList}>
-            {COURSES.map((c) => (
-              <CourseCard
-                key={c.id}
-                course={c}
-                colors={colors}
-                onPress={() => {
-                  setSelectedCourse(c);
-                  if (Platform.OS !== "web") Haptics.selectionAsync();
-                }}
-              />
-            ))}
-          </View>
+
+          {/* ── Featured course ── */}
+          <Pressable
+            onPress={() => { setSelectedCourse(COURSES[0]); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
+            style={({ pressed }) => [styles.featuredCard, { opacity: pressed ? 0.9 : 1 }]}
+          >
+            <LinearGradient colors={["#004D40", "#00796B", "#4DB6AC"]} style={styles.featuredGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <View style={styles.featuredBadgeWrap}>
+                <Text style={styles.featuredBadge}>🌱  START HERE</Text>
+              </View>
+              <Text style={styles.featuredTitle}>Mindfulness{"\n"}Foundations</Text>
+              <Text style={styles.featuredDesc}>The perfect starting point — 7 lessons covering breath, body, thoughts, and daily practice.</Text>
+              <View style={styles.featuredCta}>
+                <Text style={styles.featuredCtaText}>Begin Course</Text>
+                <Ionicons name="arrow-forward" size={14} color="#fff" />
+              </View>
+              <Text style={styles.featuredEmoji}>📖✨</Text>
+            </LinearGradient>
+          </Pressable>
+
+          {/* ── All courses as gradient cards ── */}
+          <Text style={[styles.toolCatTitle, { color: colors.text }]}>All Courses</Text>
+          <Text style={[styles.toolCatSub, { color: colors.textSecondary }]}>Structured programs to build lasting habits</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.toolRow, { paddingBottom: 8 }]}>
+            {COURSES.map((c) => {
+              const darkColor = c.color + "DD";
+              return (
+                <Pressable key={c.id}
+                  onPress={() => { setSelectedCourse(c); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
+                  style={({ pressed }) => [styles.courseHCard, { opacity: pressed ? 0.88 : 1 }]}>
+                  <LinearGradient colors={[darkColor, c.color]} style={styles.courseHGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                    <View style={styles.courseHIconWrap}>
+                      <Ionicons name={c.icon as any} size={24} color="#fff" />
+                    </View>
+                    <Text style={styles.courseHTitle}>{c.title}</Text>
+                    <Text style={styles.courseHDesc}>{c.description}</Text>
+                    <View style={styles.courseHMeta}>
+                      <Text style={styles.courseHMetaText}>{c.duration}</Text>
+                      <Text style={styles.courseHMetaDot}>·</Text>
+                      <Text style={styles.courseHMetaText}>{c.lessons.length} lessons</Text>
+                    </View>
+                  </LinearGradient>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          {/* ── 7-Day course banner ── */}
+          <Pressable onPress={() => { router.push("/course-week"); if (Platform.OS !== "web") Haptics.selectionAsync(); }}
+            style={({ pressed }) => [styles.playBanner, { opacity: pressed ? 0.9 : 1 }]}>
+            <LinearGradient colors={["#4A148C", "#7B1FA2", "#AB47BC"]} style={styles.playBannerGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.playBannerTitle}>7-Day Wellness Course</Text>
+                <Text style={styles.playBannerDesc}>Full day-by-day wellness plan with 5 sessions/day</Text>
+              </View>
+              <View style={styles.playBannerRight}>
+                <Text style={{ fontSize: 36 }}>📅</Text>
+                <View style={styles.playBannerBtn}>
+                  <Text style={styles.playBannerBtnText}>Start</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </Pressable>
+
         </Animated.View>
       )}
 
@@ -664,4 +761,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 16, paddingVertical: 7, borderRadius: 14,
   },
   playBannerBtnText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#fff" },
+  resCard: { width: 150, borderRadius: 20, overflow: "hidden" },
+  resGrad: { padding: 16, minHeight: 140, justifyContent: "flex-end" },
+  courseHCard: { width: 175, borderRadius: 20, overflow: "hidden" },
+  courseHGrad: { padding: 18, minHeight: 155, justifyContent: "flex-end" },
+  courseHIconWrap: {
+    width: 42, height: 42, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.25)",
+    alignItems: "center", justifyContent: "center", marginBottom: 12,
+  },
+  courseHTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#fff", marginBottom: 4 },
+  courseHDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.8)", lineHeight: 15, marginBottom: 8 },
+  courseHMeta: { flexDirection: "row", alignItems: "center", gap: 4 },
+  courseHMetaText: { fontFamily: "Nunito_600SemiBold", fontSize: 10, color: "rgba(255,255,255,0.75)" },
+  courseHMetaDot: { fontFamily: "Nunito_700Bold", fontSize: 10, color: "rgba(255,255,255,0.5)" },
 });
