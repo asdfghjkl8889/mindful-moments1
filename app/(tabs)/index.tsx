@@ -879,22 +879,6 @@ export default function HomeScreen() {
       </Animated.View>
 
 
-      <Animated.View
-        entering={Platform.OS !== "web" ? FadeInDown.delay(400).duration(600) : undefined}
-      >
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Mood Calendar</Text>
-        <View style={{ paddingHorizontal: 20 }}>
-          <MoodCalendar moods={allMoods} isDark={isDark} />
-        </View>
-      </Animated.View>
-
-      <Animated.View
-        entering={Platform.OS !== "web" ? FadeInDown.delay(450).duration(600) : undefined}
-        style={{ paddingHorizontal: 20, marginTop: 4 }}
-      >
-        <MiniMoodGarden moods={allMoods} isDark={isDark} />
-      </Animated.View>
-
       {recentMoods.length > 0 && (
         <Animated.View
           entering={Platform.OS !== "web" ? FadeInRight.delay(500).duration(600) : undefined}
