@@ -8,6 +8,7 @@ import {
   useColorScheme,
   Platform,
   RefreshControl,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,6 +28,7 @@ import Animated, {
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { CharacterBubble, LARRY_MOOD_MESSAGES } from "@/components/Characters";
+import { BrainDiagram } from "@/components/BrainDiagram";
 import {
   storage,
   MoodEntry,
@@ -679,6 +681,112 @@ export default function HomeScreen() {
           <StatCard icon="flame" value={streak.currentStreak} label="Day Streak" color="#FF6B6B" isDark={isDark} />
           <StatCard icon="time" value={streak.totalMinutes} label="Total Min" color={colors.tint} isDark={isDark} />
           <StatCard icon="heart" value={streak.totalSessions} label="Sessions" color={colors.lavender} isDark={isDark} />
+        </View>
+      </Animated.View>
+
+      {/* Brain Stress Diagram Card */}
+      <Animated.View
+        entering={Platform.OS !== "web" ? FadeInDown.delay(275).duration(600) : undefined}
+        style={{ marginHorizontal: 16, marginTop: 4 }}
+      >
+        <View
+          style={{
+            borderRadius: 20,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: isDark ? "#2E2040" : "#D8CEF0",
+          }}
+        >
+          <LinearGradient
+            colors={isDark ? ["#1A1530", "#1E1A2E", "#1A1530"] : ["#F0EBF8", "#EDE8F5", "#F5F0FF"]}
+            style={{ padding: 16 }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+              <View
+                style={{
+                  backgroundColor: isDark ? "#3D2A5A" : "#E8DEFF",
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  marginRight: 8,
+                }}
+              >
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: isDark ? "#CE93D8" : "#6A1B9A", letterSpacing: 0.5 }}>
+                  NEUROSCIENCE
+                </Text>
+              </View>
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 15, color: isDark ? "#E1D5F5" : "#4A1B8A", flex: 1 }}>
+                When Stress Takes Over
+              </Text>
+            </View>
+            <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: isDark ? "rgba(225,213,245,0.6)" : "rgba(74,27,138,0.65)", marginBottom: 14, lineHeight: 17 }}>
+              Your amygdala fires before your rational mind can respond
+            </Text>
+
+            <View style={{ alignItems: "center", marginBottom: 12 }}>
+              <BrainDiagram isDark={isDark} width={Dimensions.get("window").width - 72} />
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: isDark ? "rgba(38,166,154,0.12)" : "rgba(0,137,123,0.08)",
+                  borderRadius: 12,
+                  padding: 10,
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(38,166,154,0.3)" : "rgba(0,137,123,0.2)",
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#26A69A" }} />
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: isDark ? "#4DD0C4" : "#00695C" }}>
+                    Prefrontal Cortex
+                  </Text>
+                </View>
+                <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: isDark ? "rgba(77,208,196,0.75)" : "rgba(0,105,92,0.75)", lineHeight: 15 }}>
+                  Your calm, rational mind. Meditation activates and strengthens this region.
+                </Text>
+              </View>
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: isDark ? "rgba(198,40,40,0.12)" : "rgba(198,40,40,0.07)",
+                  borderRadius: 12,
+                  padding: 10,
+                  borderWidth: 1,
+                  borderColor: isDark ? "rgba(239,83,80,0.3)" : "rgba(198,40,40,0.2)",
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#EF5350" }} />
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: isDark ? "#FF6B6B" : "#C62828" }}>
+                    Amygdala
+                  </Text>
+                </View>
+                <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: isDark ? "rgba(255,107,107,0.75)" : "rgba(198,40,40,0.75)", lineHeight: 15 }}>
+                  Triggers fight-or-flight and floods the body with cortisol when it detects threat.
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={{
+                marginTop: 10,
+                backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                borderRadius: 10,
+                padding: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <Text style={{ fontSize: 16 }}>🧘</Text>
+              <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 12, color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)", flex: 1, lineHeight: 17 }}>
+                Regular mindfulness practice physically thickens the prefrontal cortex and shrinks the amygdala over time.
+              </Text>
+            </View>
+          </LinearGradient>
         </View>
       </Animated.View>
 

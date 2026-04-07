@@ -56,6 +56,7 @@ A mindfulness and wellness mobile app built with Expo React Native. Converted fr
 - Apr 2026: Created 7-Day Wellness Course (/course-week) — 5+ sessions/day per day (sunrise, midday, mid-afternoon, sunset, evening) with meals, exercise, environment, mindset themes. Progress checkboxes persisted.
 - Apr 2026: Created Negative Thoughts / CBT screen (/negative-thoughts) — 3-step thought record (identify, evidence, reframe), 8 cognitive distortions, saved history
 - Apr 2026: Added Tools tab to Explore (default) with grid cards linking to all wellness tools + games
+- Apr 2026: Added Brain Stress Diagram card to Home screen — SVG brain showing amygdala (red) and prefrontal cortex (teal) with animated glows, science card below with cortisol explanation; component in components/BrainDiagram.tsx using react-native-svg
 - Apr 2026: Created Goals screen (/goals) — 4-period goal tracking (daily/weekly/monthly/yearly), quick-add suggestions, custom goal modal with emoji+colour picker, streak tracking for daily goals, XP bonuses on completion
 - Apr 2026: Created Circadian Rhythm screen (/circadian) — cortisol line graph with 5 timed meditation windows (Dawn/Midday/Afternoon/Sunset/Evening), real-time "now" marker, XP bonuses awarded to ChallengeData when windows are logged, streak tracking
 - Apr 2026: Added pulsing red panic button to Home screen → breathing exercise
