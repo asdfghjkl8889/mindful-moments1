@@ -7,6 +7,7 @@ import {
   Pressable,
   TextInput,
   Modal,
+  KeyboardAvoidingView,
   useColorScheme,
   Platform,
   Dimensions,
@@ -617,6 +618,10 @@ export default function GoalsScreen() {
         animationType="slide"
         onRequestClose={() => setShowAdd(false)}
       >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
         <Pressable
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
           onPress={() => setShowAdd(false)}
@@ -742,6 +747,7 @@ export default function GoalsScreen() {
             </Pressable>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
