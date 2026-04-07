@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AppState, AppStateStatus } from "react-native";
 import { getApiUrl } from "@/lib/query-client";
 
 const SYNC_KEYS = [
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const tokenRef = useRef<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -86,9 +88,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  // Keep tokenRef up to date so AppState listener always has the latest token
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
+
+  // Auto-sync when app goes to background
+  useEffect(() => {
+    const handleAppState = (nextState: AppStateStatus) => {
+      if (nextState === "background" || nextState === "inactive") {
+        const t = tokenRef.current;
+        if (t) {
+          AsyncStorage.multiGet(SYNC_KEYS).then((pairs) => {
+            const data: Record<string, string> = {};
+            for (const [key, value] of pairs) {
+              if (value !== null) data[key] = value;
+            }
+            if (Object.keys(data).length > 0) {
+              authFetch("/api/user/sync", {
+                method: "POST",
+                token: t,
+                body: JSON.stringify({ data }),
+              }).catch(() => {});
+            }
+          }).catch(() => {});
+        }
+      }
+    };
+    const sub = AppState.addEventListener("change", handleAppState);
+    return () => sub.remove();
+  }, []);
+
   const persist = async (u: AuthUser, t: string) => {
     setUser(u);
     setToken(t);
+    tokenRef.current = t;
     await AsyncStorage.setItem(AUTH_TOKEN_KEY, t);
     await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(u));
   };
@@ -145,10 +179,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     if (token) {
+      // Sync latest local data before logging out
+      await uploadLocalData(token).catch(() => {});
       authFetch("/api/auth/logout", { method: "POST", token }).catch(() => {});
     }
     setUser(null);
     setToken(null);
+    tokenRef.current = null;
     await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_USER_KEY]);
   };
 
