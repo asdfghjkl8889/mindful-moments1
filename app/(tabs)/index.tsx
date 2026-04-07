@@ -518,6 +518,31 @@ export default function HomeScreen() {
   const [larryMsg] = useState(getLarryMessage());
   const [profile, setProfile] = useState<ProfileData>({ name: "", avatar: "lotus" });
 
+  // Panic button pulse rings
+  const pulse1 = useSharedValue(0);
+  const pulse2 = useSharedValue(0);
+  const pulse3 = useSharedValue(0);
+
+  useEffect(() => {
+    const dur = 2000;
+    pulse1.value = withRepeat(withTiming(1, { duration: dur, easing: Easing.out(Easing.ease) }), -1, false);
+    pulse2.value = withDelay(650,  withRepeat(withTiming(1, { duration: dur, easing: Easing.out(Easing.ease) }), -1, false));
+    pulse3.value = withDelay(1300, withRepeat(withTiming(1, { duration: dur, easing: Easing.out(Easing.ease) }), -1, false));
+  }, []);
+
+  const pulseStyle1 = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + pulse1.value * 1.4 }],
+    opacity: (1 - pulse1.value) * 0.45,
+  }));
+  const pulseStyle2 = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + pulse2.value * 1.4 }],
+    opacity: (1 - pulse2.value) * 0.45,
+  }));
+  const pulseStyle3 = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + pulse3.value * 1.4 }],
+    opacity: (1 - pulse3.value) * 0.45,
+  }));
+
   const loadData = useCallback(async () => {
     const [streakData, moods, profileData] = await Promise.all([
       storage.getStreak(),
@@ -757,20 +782,19 @@ export default function HomeScreen() {
       )}
     </ScrollView>
 
-    <Pressable
-      onPress={() => router.push("/emergency")}
-      style={({ pressed }) => [
-        styles.emergencyFab,
-        {
-          bottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 90,
-          opacity: pressed ? 0.88 : 1,
-          transform: [{ scale: pressed ? 0.95 : 1 }],
-        },
-      ]}
-    >
-      <Ionicons name="shield-checkmark" size={18} color="#fff" />
-      <Text style={styles.emergencyFabText}>Crisis Support</Text>
-    </Pressable>
+    {/* Rootd-style panic button */}
+    <View style={[styles.panicWrap, { bottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 90 }]}>
+      <Animated.View style={[styles.panicRing, pulseStyle1]} />
+      <Animated.View style={[styles.panicRing, pulseStyle2]} />
+      <Animated.View style={[styles.panicRing, pulseStyle3]} />
+      <Pressable
+        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); router.push("/emergency"); }}
+        style={({ pressed }) => [styles.panicBtn, { opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.93 : 1 }] }]}
+      >
+        <Ionicons name="warning" size={26} color="#fff" />
+        <Text style={styles.panicLabel}>SOS</Text>
+      </Pressable>
+    </View>
     </View>
   );
 }
@@ -778,26 +802,42 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   wrapper: { flex: 1 },
   container: { flex: 1 },
-  emergencyFab: {
+  panicWrap: {
     position: "absolute",
     right: 20,
-    flexDirection: "row",
+    width: 72,
+    height: 72,
     alignItems: "center",
-    gap: 7,
-    backgroundColor: "#EF5350",
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    borderRadius: 24,
-    shadowColor: "#EF5350",
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    justifyContent: "center",
   },
-  emergencyFabText: {
+  panicRing: {
+    position: "absolute",
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#EF5350",
+  },
+  panicBtn: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#D32F2F",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#B71C1C",
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 10,
+    borderWidth: 3,
+    borderColor: "#FF5252",
+  },
+  panicLabel: {
     fontFamily: "Nunito_700Bold",
-    fontSize: 13,
+    fontSize: 11,
     color: "#fff",
+    letterSpacing: 1.5,
+    marginTop: 1,
   },
   hero: {
     paddingHorizontal: 24, paddingBottom: 20,
