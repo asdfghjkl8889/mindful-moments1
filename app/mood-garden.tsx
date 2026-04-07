@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -27,7 +27,7 @@ import Colors from "@/constants/colors";
 import { storage, MoodEntry } from "@/lib/storage";
 
 const { width: SCREEN_W } = Dimensions.get("window");
-const GARDEN_W = Math.min(SCREEN_W - 40, 400);
+const CARD_W = Math.min(SCREEN_W, 430);
 
 interface Plant {
   id: string;
@@ -48,6 +48,72 @@ const MOODS = [
   { key: "stressed", icon: "thunderstorm",   color: "#EF5350", label: "Stressed" },
 ];
 
+const MOOD_PLANT: Record<string, { emoji: string; name: string; color: string; darkColor: string; description: string }> = {
+  happy:   { emoji: "🌻", name: "Sunflower",      color: "#FFD54F", darkColor: "#F57F17", description: "Joy & radiance" },
+  good:    { emoji: "🌸", name: "Cherry Blossom", color: "#FF8A80", darkColor: "#C62828", description: "Contentment & grace" },
+  neutral: { emoji: "🪷", name: "Lotus",          color: "#B39DDB", darkColor: "#4527A0", description: "Calm & balance" },
+  sad:     { emoji: "🌿", name: "Fern",           color: "#66BB6A", darkColor: "#1B5E20", description: "Growth through rain" },
+  stressed:{ emoji: "🌵", name: "Cactus",         color: "#4DB6AC", darkColor: "#004D40", description: "Resilience & strength" },
+};
+
+function PlantSprite({ plant, delay = 0 }: { plant: Plant; delay?: number }) {
+  const sway = useSharedValue(0);
+  useEffect(() => {
+    sway.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 2000 + Math.random() * 1000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(-1, { duration: 2000 + Math.random() * 1000, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1, false,
+    );
+  }, []);
+  const swayStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${sway.value * 4}deg` }] }));
+
+  return (
+    <Animated.View
+      entering={Platform.OS !== "web" ? FadeIn.delay(delay).duration(600) : undefined}
+      style={[styles.plantSprite, { left: plant.x, bottom: 0 }]}
+    >
+      <Animated.View style={swayStyle}>
+        <Text style={{ fontSize: plant.size }}>{plant.emoji}</Text>
+      </Animated.View>
+      <Text style={[styles.plantLabel, { color: plant.color }]}>{plant.name}</Text>
+    </Animated.View>
+  );
+}
+
+function GardenHero({ plants, insetTop }: { plants: Plant[]; insetTop: number }) {
+  const hour = new Date().getHours();
+  const skyColors: [string, string, string] =
+    hour >= 6  && hour < 9  ? ["#FF8A65", "#FFD54F", "#81D4FA"] :
+    hour >= 9  && hour < 17 ? ["#64B5F6", "#B3E5FC", "#C8E6C9"] :
+    hour >= 17 && hour < 20 ? ["#FF7043", "#FF8A65", "#FFB74D"] :
+                               ["#0D1B4B", "#1A237E", "#283593"];
+
+  const gardenW = CARD_W;
+
+  return (
+    <View style={[styles.heroWrap, { width: CARD_W }]}>
+      <LinearGradient colors={skyColors} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} />
+      <View style={styles.grassLayer}>
+        {plants.length === 0 ? (
+          <View style={styles.emptyGarden}>
+            <Text style={{ fontSize: 44 }}>🌱</Text>
+            <Text style={styles.emptyText}>Log your first mood{"\n"}to grow your garden</Text>
+          </View>
+        ) : (
+          plants.map((p, i) => <PlantSprite key={p.id} plant={p} delay={i * 120} />)
+        )}
+      </View>
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.55)"]}
+        style={styles.heroOverlay}
+        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+      />
+    </View>
+  );
+}
+
 function MoodCalendar({ moods, isDark }: { moods: MoodEntry[]; isDark: boolean }) {
   const colors = isDark ? Colors.dark : Colors.light;
   const now = new Date();
@@ -64,19 +130,11 @@ function MoodCalendar({ moods, isDark }: { moods: MoodEntry[]; isDark: boolean }
     return map;
   }, [moods]);
 
-  const getMoodColor = (mood: MoodEntry["mood"] | undefined) => {
-    if (!mood) return "transparent";
-    return MOODS.find((m) => m.key === mood)?.color ?? "transparent";
-  };
+  const getMoodColor = (mood: MoodEntry["mood"] | undefined) =>
+    mood ? (MOODS.find((m) => m.key === mood)?.color ?? "transparent") : "transparent";
 
-  const goToPrev = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
-    else setViewMonth(viewMonth - 1);
-  };
-  const goToNext = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
-    else setViewMonth(viewMonth + 1);
-  };
+  const goToPrev = () => viewMonth === 0 ? (setViewMonth(11), setViewYear(viewYear - 1)) : setViewMonth(viewMonth - 1);
+  const goToNext = () => viewMonth === 11 ? (setViewMonth(0), setViewYear(viewYear + 1)) : setViewMonth(viewMonth + 1);
 
   const cells = Array.from({ length: firstDayOfWeek + daysInMonth }, (_, i) => {
     if (i < firstDayOfWeek) return null;
@@ -85,119 +143,53 @@ function MoodCalendar({ moods, isDark }: { moods: MoodEntry[]; isDark: boolean }
     return { day, mood: moodMap[dateStr] };
   });
 
+  const isToday = (day: number) => {
+    const t = new Date();
+    return day === t.getDate() && viewMonth === t.getMonth() && viewYear === t.getFullYear();
+  };
+
   return (
-    <View style={{ backgroundColor: "rgba(255,255,255,0.9)", borderRadius: 16, padding: 16, width: GARDEN_W }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <Pressable onPress={goToPrev} hitSlop={12}>
-          <Ionicons name="chevron-back" size={20} color={colors.tint} />
+    <View style={[styles.calCard, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.92)" }]}>
+      <View style={styles.calHeader}>
+        <Pressable onPress={goToPrev} hitSlop={14} style={styles.calNavBtn}>
+          <Ionicons name="chevron-back" size={18} color={colors.tint} />
         </Pressable>
-        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 15, color: colors.text }}>{monthName}</Text>
-        <Pressable onPress={goToNext} hitSlop={12}>
-          <Ionicons name="chevron-forward" size={20} color={colors.tint} />
+        <Text style={[styles.calMonth, { color: colors.text }]}>{monthName}</Text>
+        <Pressable onPress={goToNext} hitSlop={14} style={styles.calNavBtn}>
+          <Ionicons name="chevron-forward" size={18} color={colors.tint} />
         </Pressable>
       </View>
 
-      <View style={{ flexDirection: "row", marginBottom: 6 }}>
+      <View style={styles.calDaysRow}>
         {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
-          <Text key={d} style={{ flex: 1, textAlign: "center", fontFamily: "Nunito_600SemiBold", fontSize: 11, color: colors.textSecondary }}>{d}</Text>
+          <Text key={d} style={[styles.calDayLabel, { color: colors.textSecondary }]}>{d}</Text>
         ))}
       </View>
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+      <View style={styles.calGrid}>
         {cells.map((cell, i) => (
-          <View key={i} style={{ width: `${100 / 7}%`, aspectRatio: 1, padding: 2 }}>
+          <View key={i} style={styles.calCell}>
             {cell ? (
-              <View style={{
-                flex: 1, borderRadius: 8, alignItems: "center", justifyContent: "center",
-                backgroundColor: cell.mood ? getMoodColor(cell.mood) + "55" : "transparent",
-              }}>
-                <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 12, color: colors.text }}>{cell.day}</Text>
-                {cell.mood && (
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: getMoodColor(cell.mood), marginTop: 1 }} />
-                )}
+              <View style={[
+                styles.calDayInner,
+                cell.mood ? { backgroundColor: getMoodColor(cell.mood) + "40" } : {},
+                isToday(cell.day) ? { borderWidth: 1.5, borderColor: colors.tint } : {},
+              ]}>
+                <Text style={[styles.calDayNum, { color: colors.text }]}>{cell.day}</Text>
+                {cell.mood && <View style={[styles.calDot, { backgroundColor: getMoodColor(cell.mood) }]} />}
               </View>
             ) : null}
           </View>
         ))}
       </View>
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+      <View style={styles.calLegend}>
         {MOODS.map((m) => (
-          <View key={m.key} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: m.color }} />
-            <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 11, color: colors.textSecondary }}>{m.label}</Text>
+          <View key={m.key} style={styles.calLegendItem}>
+            <View style={[styles.calLegendDot, { backgroundColor: m.color }]} />
+            <Text style={[styles.calLegendText, { color: colors.textSecondary }]}>{m.label}</Text>
           </View>
         ))}
-      </View>
-    </View>
-  );
-}
-
-const MOOD_PLANT: Record<string, { emoji: string; name: string; color: string; description: string }> = {
-  happy: { emoji: "🌻", name: "Sunflower", color: "#FFD54F", description: "Joy & radiance" },
-  good: { emoji: "🌸", name: "Cherry Blossom", color: "#FF8A80", description: "Contentment & grace" },
-  neutral: { emoji: "🪷", name: "Lotus", color: "#B39DDB", description: "Calm & balance" },
-  sad: { emoji: "🌿", name: "Fern", color: "#66BB6A", description: "Growth through rain" },
-  stressed: { emoji: "🌵", name: "Cactus", color: "#4DB6AC", description: "Resilience & strength" },
-};
-
-function PlantSprite({ plant, delay = 0 }: { plant: Plant; delay?: number }) {
-  const sway = useSharedValue(0);
-
-  useEffect(() => {
-    sway.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 2000 + Math.random() * 1000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(-1, { duration: 2000 + Math.random() * 1000, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      false,
-    );
-  }, []);
-
-  const swayStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${sway.value * 4}deg` }],
-  }));
-
-  return (
-    <Animated.View
-      entering={Platform.OS !== "web" ? FadeIn.delay(delay).duration(600) : undefined}
-      style={[
-        styles.plantSprite,
-        { left: plant.x, bottom: 0 },
-      ]}
-    >
-      <Animated.View style={[{ transformOrigin: "bottom" }, swayStyle]}>
-        <Text style={{ fontSize: plant.size }}>{plant.emoji}</Text>
-      </Animated.View>
-      <Text style={[styles.plantName, { color: plant.color }]}>{plant.name}</Text>
-    </Animated.View>
-  );
-}
-
-function GardenScene({ plants, mood }: { plants: Plant[]; mood: string }) {
-  const skyColors = (): [string, string, string] => {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 9) return ["#FFE0B2", "#81D4FA", "#E3F2FD"];
-    if (hour >= 9 && hour < 17) return ["#E3F2FD", "#B3E5FC", "#E8F5E9"];
-    if (hour >= 17 && hour < 20) return ["#FF8A65", "#FFB74D", "#FFF176"];
-    return ["#1A237E", "#283593", "#3949AB"];
-  };
-
-  const [s1, s2, s3] = skyColors();
-
-  return (
-    <View style={[styles.gardenScene, { width: GARDEN_W }]}>
-      <LinearGradient colors={[s1, s2, s3]} style={styles.sky} />
-      <View style={styles.grass}>
-        {plants.length === 0 ? (
-          <View style={styles.emptyGarden}>
-            <Text style={{ fontSize: 40 }}>🌱</Text>
-            <Text style={styles.emptyGardenText}>Log your first mood{"\n"}to grow your garden</Text>
-          </View>
-        ) : (
-          plants.map((p, i) => <PlantSprite key={p.id} plant={p} delay={i * 150} />)
-        )}
       </View>
     </View>
   );
@@ -211,7 +203,6 @@ export default function MoodGardenScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const [moods, setMoods] = useState<MoodEntry[]>([]);
   const [plants, setPlants] = useState<Plant[]>([]);
-  const [gardenHealth, setGardenHealth] = useState(0);
   const [insight, setInsight] = useState("");
 
   useEffect(() => {
@@ -231,52 +222,36 @@ export default function MoodGardenScreen() {
 
     const gardenPlants: Plant[] = [];
     const positions: number[] = [];
-    const totalSlots = GARDEN_W - 60;
-    let pid = 0;
+    const totalSlots = CARD_W - 80;
 
     for (const [moodKey, count] of Object.entries(counts)) {
       const info = MOOD_PLANT[moodKey];
       if (!info) continue;
-      const numPlants = Math.min(count, 4);
-      for (let i = 0; i < numPlants; i++) {
-        let x: number;
-        let attempts = 0;
-        do {
-          x = 10 + Math.floor(Math.random() * totalSlots);
-          attempts++;
-        } while (positions.some((p) => Math.abs(p - x) < 45) && attempts < 20);
+      for (let i = 0; i < Math.min(count, 4); i++) {
+        let x: number, attempts = 0;
+        do { x = 10 + Math.floor(Math.random() * totalSlots); attempts++; }
+        while (positions.some((p) => Math.abs(p - x) < 45) && attempts < 20);
         positions.push(x);
         gardenPlants.push({
-          id: `${moodKey}_${i}`,
-          mood: moodKey,
-          emoji: info.emoji,
-          name: info.name,
-          color: info.color,
-          x,
-          size: 28 + Math.floor(Math.random() * 16),
-          description: info.description,
+          id: `${moodKey}_${i}`, mood: moodKey,
+          emoji: info.emoji, name: info.name, color: info.color,
+          x, size: 28 + Math.floor(Math.random() * 16), description: info.description,
         });
-        pid++;
       }
     }
 
     gardenPlants.sort((a, b) => a.x - b.x);
     setPlants(gardenPlants);
 
-    const positiveCount = (counts.happy || 0) + (counts.good || 0);
-    const total = recent.length;
-    const health = Math.round((positiveCount / total) * 100);
-    setGardenHealth(health);
-
     const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
     const insightMap: Record<string, string> = {
-      happy: "Your garden is thriving! Joy and sunflowers fill your days. Keep shining. 🌻",
-      good: "Cherry blossoms bloom — you're in a state of gentle contentment. Beautiful. 🌸",
-      neutral: "Lotus flowers grow in still water. Your calm balance is a gift. 🪷",
-      sad: "Ferns grow strongest after rain. Your resilience is taking root. 🌿",
-      stressed: "Cacti thrive in harsh conditions. Your strength is your superpower. 🌵",
+      happy:   "Your garden is thriving! Joy and sunflowers fill your days.",
+      good:    "Cherry blossoms bloom — you're in a state of gentle contentment.",
+      neutral: "Lotus flowers grow in still water. Your calm balance is a gift.",
+      sad:     "Ferns grow strongest after rain. Your resilience is taking root.",
+      stressed:"Cacti thrive in harsh conditions. Your strength is your superpower.",
     };
-    setInsight(insightMap[dominant] || "Your garden reflects your inner world. Keep tending to it.");
+    setInsight(insightMap[dominant] || "Your garden reflects your inner world.");
   };
 
   const moodCounts = moods.slice(-14).reduce((acc, m) => {
@@ -284,114 +259,138 @@ export default function MoodGardenScreen() {
     return acc;
   }, {} as Record<string, number>);
 
+  const totalEntries = moods.length;
+  const dominantMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0];
+
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={["#E8F5E9", "#F3E5F5", "#E0F7FA"]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      <View style={[styles.header, { paddingTop: insets.top + webTopInset + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={26} color={colors.text} />
-        </Pressable>
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={[styles.title, { color: colors.text }]}>Mood Garden</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your inner world, growing</Text>
-        </View>
-        <View style={[styles.healthBadge, {
-          backgroundColor: gardenHealth >= 60 ? "#66BB6A20" : gardenHealth >= 30 ? "#FFD54F20" : "#FF8A8020",
-        }]}>
-          <Text style={[styles.healthPct, {
-            color: gardenHealth >= 60 ? "#388E3C" : gardenHealth >= 30 ? "#F57F17" : "#C62828",
-          }]}>
-            {gardenHealth}%
-          </Text>
-          <Text style={[styles.healthLabel, { color: colors.textSecondary }]}>health</Text>
-        </View>
-      </View>
-
+    <View style={[styles.root, { backgroundColor: isDark ? "#0A1628" : "#EAF4EE" }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 40,
-          alignItems: "center",
-          paddingTop: 8,
-        }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 40 }}
       >
-        <GardenScene plants={plants} mood="neutral" />
+        {/* ── Hero Garden ── */}
+        <View style={{ position: "relative" }}>
+          <GardenHero plants={plants} insetTop={insets.top + webTopInset} />
 
-        {insight ? (
-          <Animated.View
-            entering={Platform.OS !== "web" ? FadeInDown.delay(300).duration(500) : undefined}
-            style={[styles.insightCard, { backgroundColor: "rgba(255,255,255,0.9)", marginHorizontal: 20 }]}
+          {/* Back button floating over hero */}
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={12}
+            style={[styles.backBtn, { top: insets.top + webTopInset + 12 }]}
           >
-            <Ionicons name="sparkles" size={18} color="#FFD54F" />
-            <Text style={[styles.insightText, { color: colors.text }]}>{insight}</Text>
-          </Animated.View>
-        ) : null}
+            <Ionicons name="chevron-back" size={22} color="#fff" />
+          </Pressable>
 
-        <Animated.View
-          entering={Platform.OS !== "web" ? FadeInDown.delay(450).duration(500) : undefined}
-          style={[styles.legendCard, { backgroundColor: "rgba(255,255,255,0.9)", marginHorizontal: 20 }]}
-        >
-          <Text style={[styles.legendTitle, { color: colors.text }]}>Your Garden (last 14 days)</Text>
-          <View style={styles.legendGrid}>
-            {Object.entries(MOOD_PLANT).map(([key, val]) => (
-              <View key={key} style={styles.legendItem}>
-                <Text style={{ fontSize: 22 }}>{val.emoji}</Text>
-                <View>
-                  <Text style={[styles.legendName, { color: colors.text }]}>{val.name}</Text>
-                  <Text style={[styles.legendCount, { color: colors.textSecondary }]}>
-                    {moodCounts[key] || 0} times
-                  </Text>
-                </View>
-              </View>
-            ))}
+          {/* Title overlaid at bottom of hero */}
+          <View style={styles.heroTitle}>
+            <Text style={styles.heroTitleText}>Mood Garden</Text>
+            <Text style={styles.heroSubText}>Your inner world, growing</Text>
           </View>
+        </View>
+
+        <View style={{ paddingHorizontal: 20 }}>
+
+          {/* ── Insight card ── */}
+          {insight ? (
+            <Animated.View
+              entering={Platform.OS !== "web" ? FadeInDown.delay(200).duration(500) : undefined}
+            >
+              <LinearGradient
+                colors={isDark ? ["#1A2F1E", "#1E3D24"] : ["#1B5E20", "#2E7D32"]}
+                style={styles.insightCard}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.insightEmoji}>
+                  {dominantMood ? MOOD_PLANT[dominantMood[0]]?.emoji : "🌿"}
+                </Text>
+                <Text style={styles.insightText}>"{insight}"</Text>
+                <Text style={styles.insightSub}>Based on your last 14 days</Text>
+              </LinearGradient>
+            </Animated.View>
+          ) : null}
+
+          {/* ── Stats strip ── */}
+          <Animated.View
+            entering={Platform.OS !== "web" ? FadeInDown.delay(280).duration(500) : undefined}
+            style={styles.statsRow}
+          >
+            <View style={[styles.statPill, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.85)" }]}>
+              <Text style={[styles.statVal, { color: colors.text }]}>{totalEntries}</Text>
+              <Text style={[styles.statLbl, { color: colors.textSecondary }]}>Total logs</Text>
+            </View>
+            <View style={[styles.statPill, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.85)" }]}>
+              <Text style={[styles.statVal, { color: colors.text }]}>{Object.keys(moodCounts).length}</Text>
+              <Text style={[styles.statLbl, { color: colors.textSecondary }]}>Moods this fortnight</Text>
+            </View>
+            <View style={[styles.statPill, { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.85)" }]}>
+              <Text style={{ fontSize: 20 }}>{dominantMood ? MOOD_PLANT[dominantMood[0]]?.emoji : "🌱"}</Text>
+              <Text style={[styles.statLbl, { color: colors.textSecondary }]}>Top mood</Text>
+            </View>
+          </Animated.View>
+
+          {/* ── Plant breakdown ── */}
+          <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(360).duration(500) : undefined}>
+            <Text style={[styles.sectionHeading, { color: colors.text }]}>Your Plants</Text>
+            <Text style={[styles.sectionSub, { color: colors.textSecondary }]}>Grown from your last 14 days</Text>
+          </Animated.View>
+        </View>
+
+        <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(400).duration(500) : undefined}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantRow}>
+            {Object.entries(MOOD_PLANT).map(([key, val]) => {
+              const count = moodCounts[key] || 0;
+              return (
+                <View key={key} style={styles.plantCard}>
+                  <LinearGradient
+                    colors={[val.darkColor, val.color]}
+                    style={styles.plantCardGrad}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  >
+                    <Text style={styles.plantCardEmoji}>{val.emoji}</Text>
+                    <Text style={styles.plantCardName}>{val.name}</Text>
+                    <Text style={styles.plantCardDesc}>{val.description}</Text>
+                    <View style={styles.plantCardCount}>
+                      <Text style={styles.plantCardCountNum}>{count}</Text>
+                      <Text style={styles.plantCardCountLabel}>logged</Text>
+                    </View>
+                  </LinearGradient>
+                </View>
+              );
+            })}
+          </ScrollView>
         </Animated.View>
 
-        <Animated.View
-          entering={Platform.OS !== "web" ? FadeInDown.delay(600).duration(500) : undefined}
-          style={[styles.tipCard, { backgroundColor: "rgba(255,255,255,0.9)", marginHorizontal: 20 }]}
-        >
-          <Text style={[styles.tipTitle, { color: colors.text }]}>Tend your garden 🌿</Text>
-          <Text style={[styles.tipText, { color: colors.textSecondary }]}>
-            Log your mood daily on the Home screen. Each entry plants a seed. Happy moods grow sunflowers, calm moods grow lotus, and even stress grows a resilient cactus. Every emotion belongs here.
-          </Text>
-        </Animated.View>
+        <View style={{ paddingHorizontal: 20 }}>
+          {/* ── Recent Moods ── */}
+          {moods.length > 0 && (
+            <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(480).duration(500) : undefined}>
+              <Text style={[styles.sectionHeading, { color: colors.text }]}>Recent Moods</Text>
+              <Text style={[styles.sectionSub, { color: colors.textSecondary }]}>Your last 10 check-ins</Text>
+            </Animated.View>
+          )}
+        </View>
 
         {moods.length > 0 && (
-          <Animated.View
-            entering={Platform.OS !== "web" ? FadeInDown.delay(700).duration(500) : undefined}
-            style={{ width: GARDEN_W, marginBottom: 12 }}
-          >
-            <Text style={[styles.tipTitle, { color: colors.text, marginBottom: 12 }]}>Recent Moods</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}>
+          <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(510).duration(500) : undefined}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentRow}>
               {moods.slice(0, 10).map((entry) => {
                 const moodData = MOODS.find((m) => m.key === entry.mood);
+                const plant = MOOD_PLANT[entry.mood];
                 return (
-                  <View
-                    key={entry.id}
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.9)",
-                      borderRadius: 14,
-                      paddingVertical: 12,
-                      paddingHorizontal: 14,
-                      alignItems: "center",
-                      gap: 6,
-                      minWidth: 62,
-                    }}
-                  >
-                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: moodData?.color + "22", alignItems: "center", justifyContent: "center" }}>
-                      <Ionicons name={moodData?.icon as any} size={22} color={moodData?.color} />
-                    </View>
-                    <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 11, color: colors.textSecondary }}>
-                      {new Date(entry.timestamp).toLocaleDateString("en-US", { weekday: "short" })}
-                    </Text>
-                    <Text style={{ fontFamily: "Nunito_500Medium", fontSize: 10, color: colors.textSecondary }}>
-                      {new Date(entry.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </Text>
+                  <View key={entry.id} style={styles.recentCard}>
+                    <LinearGradient
+                      colors={[plant?.darkColor ?? "#333", plant?.color ?? "#666"]}
+                      style={styles.recentGrad}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                    >
+                      <Text style={styles.recentEmoji}>{plant?.emoji ?? "🌱"}</Text>
+                      <Text style={styles.recentDay}>
+                        {new Date(entry.timestamp).toLocaleDateString("en-US", { weekday: "short" })}
+                      </Text>
+                      <Text style={styles.recentDate}>
+                        {new Date(entry.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </Text>
+                    </LinearGradient>
                   </View>
                 );
               })}
@@ -399,13 +398,14 @@ export default function MoodGardenScreen() {
           </Animated.View>
         )}
 
-        <Animated.View
-          entering={Platform.OS !== "web" ? FadeInDown.delay(800).duration(500) : undefined}
-          style={{ marginHorizontal: 20, marginBottom: 12 }}
-        >
-          <Text style={[styles.tipTitle, { color: colors.text, marginBottom: 12 }]}>Mood Calendar 📅</Text>
-          <MoodCalendar moods={moods} isDark={isDark} />
-        </Animated.View>
+        {/* ── Calendar ── */}
+        <View style={{ paddingHorizontal: 20 }}>
+          <Animated.View entering={Platform.OS !== "web" ? FadeInDown.delay(600).duration(500) : undefined}>
+            <Text style={[styles.sectionHeading, { color: colors.text }]}>Mood Calendar</Text>
+            <Text style={[styles.sectionSub, { color: colors.textSecondary }]}>A full view of your emotional journey</Text>
+            <MoodCalendar moods={moods} isDark={isDark} />
+          </Animated.View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -413,46 +413,87 @@ export default function MoodGardenScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
-    flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 20, paddingBottom: 12,
-  },
-  title: { fontFamily: "Nunito_800ExtraBold", fontSize: 24 },
-  subtitle: { fontFamily: "Nunito_400Regular", fontSize: 13, marginTop: 2 },
-  healthBadge: { borderRadius: 12, padding: 10, alignItems: "center" },
-  healthPct: { fontFamily: "Nunito_800ExtraBold", fontSize: 18 },
-  healthLabel: { fontFamily: "Nunito_500Medium", fontSize: 11 },
-  gardenScene: {
-    height: 220, borderRadius: 20, overflow: "hidden", marginHorizontal: 20, marginBottom: 16,
-  },
-  sky: { position: "absolute", top: 0, left: 0, right: 0, height: "65%" },
-  grass: {
-    position: "absolute", bottom: 0, left: 0, right: 0, height: "50%",
-    backgroundColor: "#A5D6A7", borderTopLeftRadius: 16, borderTopRightRadius: 16,
+
+  heroWrap: {
+    height: 300,
+    position: "relative",
     overflow: "hidden",
   },
+  grassLayer: {
+    position: "absolute", bottom: 0, left: 0, right: 0, height: "48%",
+    backgroundColor: "#66BB6A",
+    overflow: "hidden",
+  },
+  heroOverlay: {
+    position: "absolute", bottom: 0, left: 0, right: 0, height: 120,
+  },
+  heroTitle: {
+    position: "absolute", bottom: 20, left: 22,
+  },
+  heroTitleText: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 30, color: "#fff",
+    textShadowColor: "rgba(0,0,0,0.4)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6,
+  },
+  heroSubText: {
+    fontFamily: "Nunito_400Regular", fontSize: 14, color: "rgba(255,255,255,0.85)", marginTop: 2,
+  },
+  backBtn: {
+    position: "absolute", left: 16,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.28)",
+    alignItems: "center", justifyContent: "center",
+  },
+
+  plantSprite: { position: "absolute", alignItems: "center", gap: 2 },
+  plantLabel: { fontFamily: "Nunito_600SemiBold", fontSize: 9 },
   emptyGarden: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
-  emptyGardenText: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 14, color: "#2E7D32", textAlign: "center", lineHeight: 20,
-  },
-  plantSprite: {
-    position: "absolute", alignItems: "center", gap: 2,
-  },
-  plantName: { fontFamily: "Nunito_600SemiBold", fontSize: 9 },
+  emptyText: { fontFamily: "Nunito_600SemiBold", fontSize: 14, color: "#2E7D32", textAlign: "center", lineHeight: 20 },
+
   insightCard: {
-    flexDirection: "row", alignItems: "flex-start", gap: 10,
-    borderRadius: 16, padding: 14, marginBottom: 12, width: GARDEN_W,
+    borderRadius: 20, padding: 20, marginTop: 20, marginBottom: 8,
   },
-  insightText: { flex: 1, fontFamily: "Nunito_500Medium", fontSize: 14, lineHeight: 20 },
-  legendCard: {
-    borderRadius: 16, padding: 16, marginBottom: 12, width: GARDEN_W,
-  },
-  legendTitle: { fontFamily: "Nunito_700Bold", fontSize: 15, marginBottom: 12 },
-  legendGrid: { gap: 10 },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 12 },
-  legendName: { fontFamily: "Nunito_600SemiBold", fontSize: 13 },
-  legendCount: { fontFamily: "Nunito_400Regular", fontSize: 12 },
-  tipCard: { borderRadius: 16, padding: 16, marginBottom: 12, width: GARDEN_W, gap: 8 },
-  tipTitle: { fontFamily: "Nunito_700Bold", fontSize: 15 },
-  tipText: { fontFamily: "Nunito_400Regular", fontSize: 13, lineHeight: 19 },
+  insightEmoji: { fontSize: 36, marginBottom: 10 },
+  insightText: { fontFamily: "Nunito_700Bold", fontSize: 16, color: "#fff", lineHeight: 24, fontStyle: "italic" },
+  insightSub: { fontFamily: "Nunito_500Medium", fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 10 },
+
+  statsRow: { flexDirection: "row", gap: 10, marginTop: 12, marginBottom: 4 },
+  statPill: { flex: 1, borderRadius: 16, padding: 14, alignItems: "center", gap: 4 },
+  statVal: { fontFamily: "Nunito_800ExtraBold", fontSize: 22 },
+  statLbl: { fontFamily: "Nunito_500Medium", fontSize: 10, textAlign: "center" },
+
+  sectionHeading: { fontFamily: "Nunito_800ExtraBold", fontSize: 20, marginTop: 24, marginBottom: 2 },
+  sectionSub: { fontFamily: "Nunito_400Regular", fontSize: 13, marginBottom: 14 },
+
+  plantRow: { paddingHorizontal: 20, gap: 12, paddingBottom: 4 },
+  plantCard: { width: 148, borderRadius: 20, overflow: "hidden" },
+  plantCardGrad: { padding: 18, minHeight: 170, justifyContent: "flex-end" },
+  plantCardEmoji: { fontSize: 38, marginBottom: 10 },
+  plantCardName: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#fff", marginBottom: 2 },
+  plantCardDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.8)", lineHeight: 15, marginBottom: 10 },
+  plantCardCount: { flexDirection: "row", alignItems: "baseline", gap: 4 },
+  plantCardCountNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: "#fff" },
+  plantCardCountLabel: { fontFamily: "Nunito_500Medium", fontSize: 11, color: "rgba(255,255,255,0.7)" },
+
+  recentRow: { paddingHorizontal: 20, gap: 10, paddingBottom: 4 },
+  recentCard: { width: 78, borderRadius: 18, overflow: "hidden" },
+  recentGrad: { padding: 12, paddingVertical: 16, alignItems: "center", gap: 6 },
+  recentEmoji: { fontSize: 28 },
+  recentDay: { fontFamily: "Nunito_700Bold", fontSize: 12, color: "#fff" },
+  recentDate: { fontFamily: "Nunito_500Medium", fontSize: 10, color: "rgba(255,255,255,0.75)" },
+
+  calCard: { borderRadius: 20, padding: 18, marginTop: 0 },
+  calHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
+  calNavBtn: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+  calMonth: { fontFamily: "Nunito_700Bold", fontSize: 16 },
+  calDaysRow: { flexDirection: "row", marginBottom: 8 },
+  calDayLabel: { flex: 1, textAlign: "center", fontFamily: "Nunito_600SemiBold", fontSize: 11 },
+  calGrid: { flexDirection: "row", flexWrap: "wrap" },
+  calCell: { width: `${100 / 7}%`, aspectRatio: 1, padding: 2 },
+  calDayInner: { flex: 1, borderRadius: 9, alignItems: "center", justifyContent: "center" },
+  calDayNum: { fontFamily: "Nunito_600SemiBold", fontSize: 12 },
+  calDot: { width: 5, height: 5, borderRadius: 3, marginTop: 1 },
+  calLegend: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 14 },
+  calLegendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  calLegendDot: { width: 10, height: 10, borderRadius: 5 },
+  calLegendText: { fontFamily: "Nunito_500Medium", fontSize: 11 },
 });
