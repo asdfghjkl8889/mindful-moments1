@@ -109,6 +109,10 @@ function RootLayoutNav() {
           name="circadian"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="goals"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </AuthGate>
   );

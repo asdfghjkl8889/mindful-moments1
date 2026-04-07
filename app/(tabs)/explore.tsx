@@ -390,6 +390,7 @@ export default function ExploreScreen() {
         <Animated.View entering={Platform.OS !== "web" ? FadeInDown.duration(400) : undefined}>
           <View style={styles.toolsGrid}>
             {[
+              { title: "Goals", desc: "Daily, weekly, monthly & yearly", icon: "trophy", color: "#26A69A", bg: "#E0F7FA", route: "/goals" },
               { title: "Circadian Rhythm", desc: "Meditate at your cortisol peaks", icon: "time", color: "#1565C0", bg: "#E3F2FD", route: "/circadian" },
               { title: "Challenges", desc: "Daily missions, XP & badges", icon: "trophy", color: "#FFD54F", bg: "#FFF8E1", route: "/challenges" },
               { title: "7-Day Course", desc: "Full wellness week program", icon: "calendar", color: "#4DB6AC", bg: "#E0F7FA", route: "/course-week" },
