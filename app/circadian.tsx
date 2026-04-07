@@ -86,7 +86,7 @@ const WINDOWS: MeditationWindow[] = [
     lightColor: "#FFF3E0",
     darkBg: "#2D1A00",
     icon: "sunny",
-    why: "Cortisol surges 50-100% within 30 minutes of waking — the Cortisol Awakening Response. Meditating here anchors your nervous system before the spike peaks, setting a calm foundation that carries through the morning.",
+    why: "Cortisol surges 50-100% within 30 minutes of waking — the Cortisol Awakening Response. On stressful days, this spike can run even higher, priming your body for threat-mode before breakfast. Meditating here anchors your nervous system before the peak, so the rest of the morning starts from a calmer baseline.",
     xp: 20,
   },
   {
@@ -99,7 +99,7 @@ const WINDOWS: MeditationWindow[] = [
     lightColor: "#E1F5FE",
     darkBg: "#001B2D",
     icon: "partly-sunny",
-    why: "After the morning cortisol peak, levels dip around noon. A short meditation at this natural pause prevents afternoon stress from accumulating and recharges focus for the second half of the day.",
+    why: "After the morning peak, cortisol naturally dips around noon — but a stressful morning can keep it elevated well past this point. Meditating here intercepts that pattern, gives your nervous system a genuine reset, and stops accumulated tension from carrying into the afternoon.",
     xp: 15,
   },
   {
@@ -112,7 +112,7 @@ const WINDOWS: MeditationWindow[] = [
     lightColor: "#E0F7FA",
     darkBg: "#001A17",
     icon: "leaf",
-    why: "The post-lunch cortisol trough (2-3pm) is when focus and willpower dip lowest. Meditation here creates a micro-recovery, preventing the stress rebound that typically spikes cortisol again in the late afternoon.",
+    why: "Under normal conditions, cortisol dips to a low around 2-3pm. But if you've had a stressful day, it can stay elevated or even spike here instead. Either way, this is when the body most needs a reset — meditation here either deepens the natural recovery or actively brings an elevated stress response back down.",
     xp: 15,
   },
   {
@@ -124,8 +124,8 @@ const WINDOWS: MeditationWindow[] = [
     color: "#AD1457",
     lightColor: "#FCE4EC",
     darkBg: "#2D0015",
-    icon: "sunset",
-    why: "As light fades, cortisol transitions toward melatonin production. Meditating at this boundary helps your body shift from alert to recovery mode — a crucial reset for accumulated daily stress.",
+    icon: "partly-sunny-outline",
+    why: "Cortisol should be declining by sunset — but after a difficult day, it often stays elevated, blocking the natural shift toward melatonin and recovery. This window is where the day's stress either gets released or carried into the night. Meditating here makes a real difference to how you feel by bedtime.",
     xp: 20,
   },
   {
@@ -138,7 +138,7 @@ const WINDOWS: MeditationWindow[] = [
     lightColor: "#EDE7F6",
     darkBg: "#150A2D",
     icon: "moon",
-    why: "At the lowest cortisol point of your 24-hour cycle, the nervous system is primed for deep relaxation. Meditation here activates the parasympathetic response, lowers core body temperature, and directly improves sleep quality.",
+    why: "This should be your cortisol's natural low point — but chronic stress can keep it raised even here, which is one of the most common causes of poor sleep. Meditation here is especially powerful if you've had a tough day: it actively lowers the stress hormones that would otherwise keep your mind running when your body needs rest.",
     xp: 25,
   },
 ];
@@ -983,7 +983,7 @@ export default function CircadianScreen() {
               color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.6)",
             }}
           >
-            {"Cortisol is your body's primary stress and wakefulness hormone. It follows a predictable 24-hour pattern: a sharp surge after waking (the Cortisol Awakening Response), a gradual decline through the day with small fluctuations, and a low point overnight.\n\nMeditation reduces cortisol by activating the parasympathetic nervous system. Timing your practice at the natural peaks and troughs amplifies this effect — working with your biology, not against it. Over time, consistent circadian meditation lowers baseline cortisol, improves sleep architecture, and builds emotional resilience."}
+{"Cortisol is your body's primary stress hormone. Under calm conditions it follows the curve shown — a sharp morning surge, a gradual daytime decline, and a low point overnight.\n\nStress overrides this pattern. A difficult meeting, an argument, or even a worrying thought can push cortisol above its expected level at any time of day. This is why the curve on the graph shows typical levels, not a guarantee — on hard days, your actual cortisol can be significantly higher across all five windows.\n\nThat's also why these windows matter most when life is demanding. Meditation activates the parasympathetic nervous system (your body's off switch for stress), directly lowering cortisol regardless of how high it's climbed. Practising consistently at these natural transition points trains your nervous system to recover faster and keeps your baseline lower over time."}
           </Text>
         </View>
 
