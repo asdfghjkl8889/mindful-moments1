@@ -23,6 +23,7 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import Colors from "@/constants/colors";
 import { storage, JournalEntry, GratitudeTile } from "@/lib/storage";
+import { MiniCharacter } from "@/components/Characters";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const TILE_SIZE = (Math.min(SCREEN_W, 500) - 48) / 2;
@@ -273,11 +274,10 @@ export default function JournalScreen() {
       {tab === "journal" ? (
         journals.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="book-outline" size={48} color={colors.textTertiary} />
-            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>Start journaling</Text>
-            <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
-              Write down what you're grateful for, add photos, and reflect on your day.
-            </Text>
+            <MiniCharacter
+              character="luna"
+              message="Hi! I am Luna. I will keep your journal safe. Write your first entry — even one sentence counts."
+            />
           </View>
         ) : (
           <FlatList
@@ -296,11 +296,10 @@ export default function JournalScreen() {
       ) : (
         journalPhotos.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={{ fontSize: 48 }}>🌸</Text>
-            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>Your Gratitude Wall</Text>
-            <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
-              Tap + to add a photo that captures something you're grateful for. Photos from your journal entries appear here too.
-            </Text>
+            <MiniCharacter
+              character="luna"
+              message="Your Gratitude Wall is empty! Add a photo of something you are thankful for. Every picture tells a story."
+            />
           </View>
         ) : (
           <FlatList

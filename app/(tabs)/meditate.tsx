@@ -26,6 +26,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Colors from "@/constants/colors";
 import { storage } from "@/lib/storage";
+import { CelebrationOverlay } from "@/components/Characters";
 
 const DURATIONS = [
   { minutes: 1, label: "1 min" },
@@ -207,6 +208,7 @@ export default function MeditateScreen() {
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300);
   const [completed, setCompleted] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [selectedGuided, setSelectedGuided] = useState(GUIDED_MEDITATIONS[0]);
   const [currentCueText, setCurrentCueText] = useState("");
@@ -299,6 +301,7 @@ export default function MeditateScreen() {
             clearInterval(intervalRef.current!);
             setIsActive(false);
             setCompleted(true);
+            setShowCelebration(true);
             if (Platform.OS !== "web") {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
@@ -624,6 +627,13 @@ export default function MeditateScreen() {
           </View>
         </View>
       )}
+      <CelebrationOverlay
+        visible={showCelebration}
+        character="sage"
+        title={`${selectedDuration} minutes complete!`}
+        message="Sage is so proud of you. Every session is a gift you give yourself. Your mind thanks you."
+        onDismiss={() => setShowCelebration(false)}
+      />
     </View>
   );
 }

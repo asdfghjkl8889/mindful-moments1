@@ -10,7 +10,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -26,6 +26,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
+import { CharacterBubble, LARRY_MOOD_MESSAGES } from "@/components/Characters";
 import {
   storage,
   MoodEntry,
@@ -356,43 +357,19 @@ const fyStyles = StyleSheet.create({
   cardChipText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#fff" },
 });
 
-function LarryTurtle({ message, isDark }: { message: string; isDark: boolean }) {
-  const colors = isDark ? Colors.dark : Colors.light;
-  const bobValue = useSharedValue(0);
-
-  useEffect(() => {
-    bobValue.value = withRepeat(
-      withSequence(
-        withTiming(-4, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(4, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      true,
-    );
-  }, []);
-
-  const bobStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: bobValue.value }],
-  }));
+function LarryTurtle({ message, mood }: { message: string; mood: string | null }) {
+  const moodMsg = mood && LARRY_MOOD_MESSAGES[mood]
+    ? LARRY_MOOD_MESSAGES[mood]
+    : message;
 
   return (
-    <View
-      style={[
-        styles.larryCard,
-        { backgroundColor: "#E8F5E9", borderColor: colors.cardBorder },
-      ]}
-    >
-      <View style={styles.larryRow}>
-        <Animated.View style={[styles.larryAvatar, bobStyle]}>
-          <MaterialCommunityIcons name="turtle" size={36} color={colors.sage} />
-        </Animated.View>
-        <View style={styles.larryTextWrap}>
-          <Text style={[styles.larryName, { color: colors.sage }]}>Larry the Turtle</Text>
-          <Text style={[styles.larryMessage, { color: colors.textSecondary }]}>
-            {message}
-          </Text>
-        </View>
-      </View>
+    <View style={styles.larryCard}>
+      <CharacterBubble
+        character="larry"
+        message={moodMsg}
+        size={78}
+        animation="bob"
+      />
     </View>
   );
 }
@@ -691,7 +668,7 @@ export default function HomeScreen() {
         entering={Platform.OS !== "web" ? FadeInDown.delay(200).duration(600) : undefined}
         style={{ marginHorizontal: 20, marginTop: 20 }}
       >
-        <LarryTurtle message={larryMsg} isDark={isDark} />
+        <LarryTurtle message={larryMsg} mood={selectedMood} />
       </Animated.View>
 
       <Animated.View
@@ -869,16 +846,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 10,
   },
   moodSavedText: { fontFamily: "Nunito_500Medium", fontSize: 13 },
-  larryCard: {
-    borderRadius: 16, padding: 16, borderWidth: 1,
-  },
-  larryRow: { flexDirection: "row", alignItems: "center", gap: 14 },
-  larryAvatar: {
-    width: 56, height: 56, borderRadius: 28, backgroundColor: "rgba(123,174,127,0.15)", alignItems: "center", justifyContent: "center",
-  },
-  larryTextWrap: { flex: 1 },
-  larryName: { fontFamily: "Nunito_700Bold", fontSize: 14, marginBottom: 2 },
-  larryMessage: { fontFamily: "Nunito_400Regular", fontSize: 13, lineHeight: 18 },
+  larryCard: { borderRadius: 16, paddingVertical: 4 },
   sectionTitle: {
     fontFamily: "Nunito_700Bold", fontSize: 18, marginHorizontal: 20, marginTop: 24, marginBottom: 12,
   },
