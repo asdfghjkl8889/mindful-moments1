@@ -4,6 +4,7 @@ import { AppState, AppStateStatus } from "react-native";
 import { getApiUrl } from "@/lib/query-client";
 
 const SYNC_KEYS = [
+  // Core storage (lib/storage.ts)
   "mindful_moods",
   "mindful_journals",
   "mindful_meditations",
@@ -14,6 +15,19 @@ const SYNC_KEYS = [
   "mindful_challenges",
   "mindful_week_course",
   "mindful_gratitude_tiles",
+  // Goals screen
+  "mindful_goals",
+  // Overthinking / brain dump screen
+  "mindful_brain_dumps",
+  "mindful_sorted_thoughts",
+  "mindful_predictions",
+  "mindful_named_stories",
+  // Circadian rhythm screen
+  "mindful_circadian_log",
+  // Anger management screen
+  "mindful_anger_logs",
+  // Negative thoughts / CBT screen
+  "mindful_thought_records",
 ];
 
 const AUTH_TOKEN_KEY = "mindful_auth_token";
