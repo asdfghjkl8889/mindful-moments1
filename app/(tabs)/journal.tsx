@@ -156,16 +156,25 @@ export default function JournalScreen() {
     setRefreshing(false);
   }, [loadData]);
 
+  const uriFromAsset = (asset: ImagePicker.ImagePickerAsset): string => {
+    if (Platform.OS !== "web" && asset.base64) {
+      return `data:image/jpeg;base64,${asset.base64}`;
+    }
+    return asset.uri;
+  };
+
   const pickImage = async (forTile = false) => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: forTile ? [1, 1] : [4, 3],
-      quality: 0.7,
+      quality: 0.5,
+      base64: Platform.OS !== "web",
     });
     if (!result.canceled && result.assets[0]) {
-      if (forTile) setTilePhotoUri(result.assets[0].uri);
-      else setPhotoUri(result.assets[0].uri);
+      const uri = uriFromAsset(result.assets[0]);
+      if (forTile) setTilePhotoUri(uri);
+      else setPhotoUri(uri);
       if (Platform.OS !== "web") Haptics.selectionAsync();
     }
   };
@@ -179,11 +188,13 @@ export default function JournalScreen() {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: forTile ? [1, 1] : [4, 3],
-      quality: 0.7,
+      quality: 0.5,
+      base64: Platform.OS !== "web",
     });
     if (!result.canceled && result.assets[0]) {
-      if (forTile) setTilePhotoUri(result.assets[0].uri);
-      else setPhotoUri(result.assets[0].uri);
+      const uri = uriFromAsset(result.assets[0]);
+      if (forTile) setTilePhotoUri(uri);
+      else setPhotoUri(uri);
       if (Platform.OS !== "web") Haptics.selectionAsync();
     }
   };
