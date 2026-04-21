@@ -35,7 +35,7 @@ export default function ProfileScreen() {
   const isDark = colorScheme === "dark";
   const colors = isDark ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const [profile, setProfile] = useState<ProfileData>({
     name: "",
     avatar: "lotus",
@@ -313,6 +313,41 @@ export default function ProfileScreen() {
             Sign Out
           </Text>
         </Pressable>
+
+        {user && (
+          <Pressable
+            style={[
+              styles.infoCard,
+              { backgroundColor: isDark ? "#2a1010" : "#fff5f5", borderColor: "#ffaaaa" },
+            ]}
+            onPress={() => {
+              Alert.alert(
+                "Delete Account",
+                "This will permanently delete your account and all your data. This cannot be undone.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Delete Forever",
+                    style: "destructive",
+                    onPress: async () => {
+                      try {
+                        await deleteAccount();
+                        router.replace("/welcome");
+                      } catch {
+                        Alert.alert("Error", "Failed to delete account. Please try again.");
+                      }
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Ionicons name="trash-outline" size={20} color="#c62828" />
+            <Text style={[styles.infoText, { color: "#c62828", fontFamily: "Nunito_600SemiBold" }]}>
+              Delete Account
+            </Text>
+          </Pressable>
+        )}
 
         {/* Disclaimer */}
         <View

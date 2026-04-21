@@ -209,6 +209,26 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
+  // Delete account
+  app.delete("/api/auth/account", async (req: Request, res: Response) => {
+    try {
+      const token = req.headers.authorization?.replace("Bearer ", "");
+      if (!token) return res.status(401).json({ error: "No token" });
+
+      const user = await getUserFromToken(token);
+      if (!user) return res.status(401).json({ error: "Invalid session" });
+
+      await pool.query("DELETE FROM user_progress WHERE user_id = $1", [user.id]);
+      await pool.query("DELETE FROM user_sessions WHERE user_id = $1", [user.id]);
+      await pool.query("DELETE FROM users WHERE id = $1", [user.id]);
+
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Delete account error:", err);
+      return res.status(500).json({ error: "Failed to delete account" });
+    }
+  });
+
   // Get security question for an email (does not confirm account exists to prevent enumeration)
   app.get("/api/auth/security-question", async (req: Request, res: Response) => {
     try {

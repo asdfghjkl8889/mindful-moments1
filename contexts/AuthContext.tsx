@@ -48,6 +48,7 @@ interface AuthContextType {
   register: (email: string, name: string, password: string, avatar?: string, recoveryQuestion?: string, recoveryAnswer?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   updateProfile: (name: string, avatar: string) => Promise<void>;
   syncProgress: (data: Record<string, string>) => Promise<void>;
   loadProgress: () => Promise<Record<string, string>>;
@@ -203,6 +204,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_USER_KEY]);
   };
 
+  const deleteAccount = async () => {
+    if (!token) return;
+    await authFetch("/api/auth/account", { method: "DELETE", token });
+    setUser(null);
+    setToken(null);
+    tokenRef.current = null;
+    await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_USER_KEY, ...SYNC_KEYS]);
+  };
+
   const updateProfile = async (name: string, avatar: string) => {
     if (!token) return;
     const data = await authFetch("/api/auth/profile", {
@@ -233,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user, token, isLoading,
       isAuthenticated: !!user && !!token,
-      register, login, logout, updateProfile, syncProgress, loadProgress,
+      register, login, logout, deleteAccount, updateProfile, syncProgress, loadProgress,
     }}>
       {children}
     </AuthContext.Provider>
