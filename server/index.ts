@@ -184,6 +184,17 @@ function configureExpoAndLanding(app: express.Application) {
     res.status(200).send(fs.readFileSync(privacyPath, "utf-8"));
   });
 
+  app.get("/support", (_req: Request, res: Response) => {
+    const supportPath = path.resolve(
+      process.cwd(),
+      "server",
+      "templates",
+      "support.html",
+    );
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.status(200).send(fs.readFileSync(supportPath, "utf-8"));
+  });
+
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) {
       return next();
