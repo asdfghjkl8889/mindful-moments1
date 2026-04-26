@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.mindfulmoments.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Mindful Moments uses your photo library so you can add photos to your journal entries and Gratitude Wall.",
         "NSPhotoLibraryAddUsageDescription": "Mindful Moments saves photos to your library when you export gratitude wall images.",
