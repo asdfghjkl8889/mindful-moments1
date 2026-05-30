@@ -56,6 +56,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "31e93e21-afcf-4d98-8349-4dfc463f6b6e"
+      }
+    },
+    "owner": "htc2597"
   }
 }
