@@ -1,0 +1,75 @@
+{
+  "name": "Mindful Moments",
+  "slug": "mindful-moments",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "icon": "./assets/images/icon.png",
+  "scheme": "mindfulmoments",
+  "userInterfaceStyle": "light",
+  "newArchEnabled": true,
+  "splash": {
+    "image": "./assets/images/splash-icon.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#ffffff"
+  },
+  "ios": {
+    "supportsTablet": false,
+    "bundleIdentifier": "com.mindfulmoments.app",
+    "buildNumber": "3",
+    "infoPlist": {
+      "NSPhotoLibraryUsageDescription": "Mindful Moments uses your photo library so you can add photos to your journal entries and Gratitude Wall.",
+      "NSPhotoLibraryAddUsageDescription": "Mindful Moments saves photos to your library when you export gratitude wall images.",
+      "NSCameraUsageDescription": "Mindful Moments uses your camera so you can take photos directly for your journal entries.",
+      "NSMicrophoneUsageDescription": "Mindful Moments uses your microphone to support audio features during meditation sessions."
+    }
+  },
+  "android": {
+    "package": "com.mindfulmoments.app",
+    "adaptiveIcon": {
+      "backgroundColor": "#E6F4FE",
+      "foregroundImage": "./assets/images/android-icon-foreground.png",
+      "backgroundImage": "./assets/images/android-icon-background.png",
+      "monochromeImage": "./assets/images/android-icon-monochrome.png"
+    },
+    "permissions": [
+      "android.permission.RECORD_AUDIO"
+    ]
+  },
+  "web": {
+    "favicon": "./assets/images/favicon.png"
+  },
+  "plugins": [
+    [
+      "expo-router",
+      {
+        "origin": "https://replit.com/"
+      }
+    ],
+    "expo-font",
+    "expo-web-browser",
+    [
+      "expo-image-picker",
+      {
+        "photosPermission": "Mindful Moments uses your photo library so you can add photos to your journal entries and Gratitude Wall.",
+        "cameraPermission": "Mindful Moments uses your camera so you can take photos for your journal entries."
+      }
+    ]
+  ],
+  "experiments": {
+    "typedRoutes": true,
+    "reactCompiler": true
+  },
+  "sdkVersion": "54.0.0",
+  "platforms": [
+    "ios",
+    "android",
+    "web"
+  ],
+  "extra": {
+    "router": {
+      "origin": "https://replit.com/"
+    }
+  }
+}
+
+The "extra.eas.projectId" field is missing from your app config.
