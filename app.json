@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.mindfulmoments.app",
       "buildNumber": "3",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Mindful Moments uses your photo library so you can add photos to your journal entries and Gratitude Wall.",
         "NSPhotoLibraryAddUsageDescription": "Mindful Moments saves photos to your library when you export gratitude wall images.",
         "NSCameraUsageDescription": "Mindful Moments uses your camera so you can take photos directly for your journal entries.",
